@@ -1,5 +1,6 @@
 module ProgenyTestingTools
 
+using Random
 using Statistics
 using SparseArrays
 using LinearAlgebra
@@ -42,7 +43,7 @@ end
 # maxCG: group x generation: increments when phenotype is assigned
 # sg: group of sire
 # dg: group of dam
-struct PTPopulation
+mutable struct PTPopulation
    par::PTParameters
    hp::Bool
    maxAnimal::Int
@@ -71,7 +72,7 @@ end
 # sires, dams, id: linked to IDs in a population
 mutable struct PTGroup
    pop::PTPopulation
-   gid::Int
+   groupid::Int
    n::Int
    maxSire::Int
    maxDam::Int
@@ -83,5 +84,11 @@ mutable struct PTGroup
 end
 
 export PTParameters, PTAnimal, PTPopulation, PTGroup
+export check_parameters, get_var_poly, get_var_qtl, get_var_pe, get_var_error
+export generate_population, migrate_from_hp!, generate_group, copy_group, add_animal!, 
+       selectid
+
+include("parameter.jl")
+include("population.jl")
 
 end
