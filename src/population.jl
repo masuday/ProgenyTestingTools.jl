@@ -135,7 +135,7 @@ The migrated animals have new IDs in the new population.
 The animals will have "dead" status in the historical population.
 It returns a new ID list `newidlist` in the new population.
 """
-function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year=0)
+function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year::Union{Int,Vector{Int}}=0)
    n = length(idlist)
    newidlist = Vector{Int}()
    @inbounds for id in idlist
@@ -165,7 +165,35 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
       #   pop.tbv[pop.maxAnimal] = pop.pbv[pop.maxAnimal] + pop.qbv[pop.maxAnimal]
       #end
    end
+   # assign year
+   assign_year!(pop, idlist, year::Vector{Int})
    return newidlist
+end
+
+"""
+    assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Vector{Int})
+    assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Int)
+
+Assign birth year to animals defied by `idlist`.
+By default, the "years" will be evenly assigned to the animals.
+"""
+function assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Vector{Int})
+   m = length(year)
+   j = 1
+   @inbounds for i in idlist
+      if 0<i && i<=pop.maxAnimal
+         pop.year[i] = year[j]
+         j = j + 1
+         if j>m
+            j = 1
+         end
+      end
+   end
+   return nothing
+end
+function assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Int)
+   assign_year!(pop, idlist, [year])
+   return nothing
 end
 
 # new group with founder males and females
