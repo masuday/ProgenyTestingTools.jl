@@ -2,6 +2,7 @@
 
 """
     update_inbreeding!(sires, dams, f)
+    update_inbreeding!(pop)
 
 Interenal routine.
 """
@@ -12,6 +13,11 @@ function update_inbreeding!(sires::Vector{Int}, dams::Vector{Int}, inb::Vector{F
    else
       error("size mismatch: f and inb")
    end
+   return
+end
+
+function update_inbreeding!(pop::PTPopulation)
+   update_inbreeding!(pop.df.sire, pop.df.dam, pop.df.inb)
 end
 
 """
