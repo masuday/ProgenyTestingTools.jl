@@ -96,7 +96,8 @@ Add an animal to population `pop`.
 The added animals lose the pedigree information.
 """
 function add_new_animal!(pop::PTPopulation, male::Bool, animal::PTAnimal; 
-                     genotyped=false, year=0, alive=true, pregnant=false, sire=0, dam=0, siregroup=0, damgroup=0, inb=0.0, pbv=0.0, qbv=0.0, tbv=0.0, ebv=0.0, rel=missing, gebv=missing)
+                     genotyped=false, year=0, alive=true, pregnant=false, sire=0, dam=0, siregroup=0, damgroup=0, inb=0.0,
+                     pbv=0.0, qbv=0.0, tbv=0.0, ebv=0.0, rel=missing, gebv=missing)
    pop.maxAnimal = pop.maxAnimal + 1
    (nrec,firsty,lasty,avgy) = get_phenotypic_information(animal.y)
    newdata = (pop.maxAnimal, male, year, alive, pregnant, genotyped, sire, dam, siregroup, damgroup, 0, 0, inb, pbv, qbv, tbv, ebv, gebv, rel, nrec, firsty, lasty, avgy)
