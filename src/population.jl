@@ -352,6 +352,26 @@ function get_symbol_array(fun)
    return symb
 end
 
+# random selection
+function random_sampling(pop::PTPopulation, n::Int; male::Bool=false, female::Bool=false, aliveonly::Bool=true, allowempty::Bool=true)
+   if male && female
+      idlist = selectid([:id] => x->x>0, pop, aliveonly=aliveonly, sortby=:random, allowempty=allowempty)
+   elseif male
+      idlist = selectid([:male] => x->x==true, pop, aliveonly=aliveonly, sortby=:random, allowempty=allowempty)
+   elseif female
+      idlist = selectid([:male] => x->x==!true, pop, aliveonly=aliveonly, sortby=:random, allowempty=allowempty)
+   else
+      throw(ArgumentError("needs male=true and/or female=true"))
+   end
+   if length(idlist)>=n
+      return idlist[1:n]
+   elseif allowempty
+      return idlist
+   else
+      error("too few sampled individuals")
+   end
+end
+
 """
     n = add_sires!(group::PTGroup, idlist::Vector{Int})
 
