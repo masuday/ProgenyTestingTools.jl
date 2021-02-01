@@ -314,6 +314,7 @@ end
    @test 0 == add_sires!(group,[1,3,1,2,3])
    @test 0 == add_sires!(group,[5,6,7,8])
    @test all( sort(group.sires) .==  [1,3])
+   @test vacancy_for_sires(group) == 1
 
    # capacity full
    @test 0 == add_dams!(group,[5,6,7])
@@ -326,4 +327,5 @@ end
    @test 0 == add_dams!(group,[5,6,5,7,6,7])
    @test 0 == add_dams!(group,[1,2,3,4])
    @test all( sort(group.dams) .==  [5,6])
+   @test vacancy_for_dams(group) == 2
 end

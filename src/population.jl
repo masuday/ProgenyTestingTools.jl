@@ -434,3 +434,21 @@ end
 function add_dams!(group::PTGroup, id::Int; verbose::Bool=false)
    return add_dams!(group, [id], verbose=verbose)
 end
+
+"""
+    n = vacancy_for_sires(group)
+
+The number of vacant sires to be filled.
+"""
+function vacancy_for_sires(group)
+   return group.maxSire - length(group.sires)
+end
+
+"""
+    n = vacancy_for_dams(group)
+
+The number of vacant dams to be filled.
+"""
+function vacancy_for_dams(group)
+   return group.maxDam - length(group.dams)
+end
