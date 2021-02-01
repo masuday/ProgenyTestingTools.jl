@@ -136,9 +136,10 @@ The animals will have "dead" status in the historical population.
 It returns a new ID list `newidlist` in the new population.
 """
 function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year::Union{Int,Vector{Int}}=0)
-   n = length(idlist)
+   unique_idlist = unique(idlist)
+   n = length(unique_idlist)
    newidlist = Vector{Int}()
-   @inbounds for id in idlist
+   @inbounds for id in unique_idlist
       # check id in the historiacl population
       if id > hp.maxAnimal
          error("No such ID $(id) in the first population")
@@ -152,7 +153,7 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
          # assigned new id
          push!(newidlist, pop.maxAnimal)
       else
-         @warn "id $(id) in hp is not alive."
+         @warn "id $(id) in hp is not alive, and has not been added to the populatiopn."
       end
 
       # (hp) id to (pop) pop.maxAnimal
@@ -167,7 +168,7 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
       #end
    end
    # assign year
-   assign_year!(pop, idlist, year)
+   assign_year!(pop, unique_idlist, year)
    return newidlist
 end
 
@@ -247,28 +248,68 @@ end
 # a general function to select IDs for a filter function
 # example 1: selectid(:male => x -> x==true, hp, aliveonly=true)
 # example 2: selectid([:male,:sire] => (x,y) -> x==true && y==0, hp, aliveonly=true)
-function selectid(fun, pop::PTPopulation; idlist::Vector{Int}=Int[], aliveonly::Bool=false, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
+function selectid(fun, pop::PTPopulation; idlist::Vector{Int}=Int[], aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
    # symbols
-   if typeof(fun[1])==Symbol
-      symb = [fun[1]]
+   symb = get_symbol_array(fun)
+   if !in(:alive,symb); push!(symb,:alive); end
+   if !in(:id,symb);    push!(symb,:id);    end
+
+   return _selectid(fun, symb, pop.df, idlist=idlist, aliveonly=aliveonly, sortby=sortby, rev=rev, allowempty=allowempty)
+end
+
+# for groups
+function selectid(fun, group::PTGroup; aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
+   # symbols
+   symb = get_symbol_array(fun)
+   if !in(:alive,symb); push!(symb,:alive); end
+   if !in(:id,symb);    push!(symb,:id);    end
+
+   return _selectid(fun, symb, group.pop.df, idlist=group.id, aliveonly=aliveonly, sortby=sortby, rev=rev, allowempty=allowempty)
+end
+
+function selectid_general(fun, group::PTGroup; idlist::Vector{Int}=Int[], aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
+   # symbols
+   symb = get_symbol_array(fun)
+   if !in(:alive,symb); push!(symb,:alive); end
+   if !in(:id,symb);    push!(symb,:id);    end
+   
+   # including :generation
+   if in(:generation,symb)
+      if length(idlist)>0
+         unique_id = sort(unique(intersection(idlist,group.id)))
+         df = pop.df[unique_id,symb]
+         df[:,:generation] = group.generation[unique_id]
+      else
+         df = pop.df[group.id,symb]
+         df[:,:generation] = group.generation
+      end
    else
-      symb = copy(fun[1])
+      if length(idlist)>0
+         unique_id = sort(unique(intersection(idlist,group.id)))
+         df = group.pop.df[unique_id,symb]
+      else
+         df = group.pop.df[group.id,symb]
+      end
    end
-   # add a column for ID
-   push!(symb,:id)
+
+   return _selectid(fun, symb, df, aliveonly=aliveonly, sortby=sortby, rev=rev, allowempty=allowempty)
+end
+
+function _selectid(fun, symb::Vector{Symbol}, df::DataFrame; idlist::Vector{Int}=Int[], aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
    # filtering
    if aliveonly
       if length(idlist)>0
-         alive_id = pop.df.alive[idlist] .== true
+         alive_id = unique(idlist[findall(df[idlist,:alive])])
       else
-         alive_id = pop.df.alive .== true
+         alive_id = df[df[!,:alive],:id]
       end
-      selected_id = collect( filter(fun, pop.df[alive_id,symb],view=true)[!,:id] )
+      selected_id = collect( filter(fun, df[alive_id,symb],view=true)[!,:id] )
    else
       if length(idlist)>0
-         selected_id = collect( filter(fun, pop.df[idlist,symb],view=true)[!,:id] )
+         unique_id = unique(idlist)
+         selected_id = collect( filter(fun, df[unique_id,symb],view=true)[!,:id] )
       else
-         selected_id = collect( filter(fun, pop.df[:,symb],view=true)[!,:id] )
+         selected_id = collect( filter(fun, df[:,symb],view=true)[!,:id] )
       end
    end
    # sort
@@ -277,12 +318,21 @@ function selectid(fun, pop::PTPopulation; idlist::Vector{Int}=Int[], aliveonly::
    elseif sortby==:random
       ret_id = randperm(selected_id)
    else
-      perm = sortperm(pop.df[selected_id,sortby],rev=rev)
+      perm = sortperm(df[selected_id,sortby],rev=rev)
       ret_id = selected_id[perm]
    end
    # check
-   if !allowempty && isempty(ret_id)<1
+   if !allowempty && isempty(ret_id)
       error("empty ID list generated by selectid")
    end
    return ret_id
+end
+
+function get_symbol_array(fun)
+   if typeof(fun[1])==Symbol
+      symb = [fun[1]]
+   else
+      symb = copy(fun[1])
+   end
+   return symb
 end
