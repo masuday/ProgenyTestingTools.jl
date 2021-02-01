@@ -90,5 +90,6 @@ export generate_population, migrate_from_hp!, generate_group, copy_group, add_ne
 
 include("parameter.jl")
 include("population.jl")
+include("pedigree.jl")
 
 end
