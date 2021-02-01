@@ -213,7 +213,7 @@ end
    pop.df[7,:alive] = false
    pop.df[!,:tbv] = [2,4,3,1, 2,1,3,4] * 1.0
    pop.df[!,:gebv] = [2,4,3,missing, 2,1,missing,4] * 1.0
-   group = generate_group(pop, sires=pop_bulls[1:3], dams=pop_dams[1:3])
+   group = generate_group(pop, sires=pop_bulls[1:3], dams=pop_dams[1:3], aliveonly=false)
    group.generation = collect(1:length(group.generation))*10
    # simple selection: default aliveonly=true
    id = selectid(:male => x -> x==true, group)
@@ -251,4 +251,79 @@ end
    @test all( id .== [3,1] )
    id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=5.0, group, sortby=:gebv, allowempty=true)
    @test all( id .== [] )
+
+   # removed dead individuals
+   group = generate_group(pop, sires=pop_bulls[1:3], dams=pop_dams[1:3], aliveonly=true)
+   # simple selection: default aliveonly=true
+   id = selectid(:male => x -> x==true, group)
+   @test all( id .== [1,3] )
+   id = selectid(:male => x -> x==true, group, aliveonly=false)
+   @test all( id .== [1,3] )
+   id = selectid(:male => x -> x==false, group)
+   @test all( id .== [5,6] )
+   id = selectid(:male => x -> x==false, group, aliveonly=false)
+   @test all( id .== [5,6] )
+   # multiple conditions
+   id = selectid([:male,:tbv] => (x,y) -> x==true && y>=3.0, group)
+   @test all( id .== [3] )
+   id = selectid([:male,:tbv] => (x,y) -> x==true && y>=3.0, group, aliveonly=false)
+   @test all( id .== [3] )
+   # missing values
+   id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=2.0, group)
+   @test all( id .== [1,3] )
+   id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=2.0, group, aliveonly=false)
+   @test all( id .== [1,3] )
+   # allowempty
+   id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=5.0, group, allowempty=true)
+   @test all( id .== [] )
+   @test_throws ErrorException selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=5.0, group, allowempty=false)
+   # sort
+   id = selectid(:male => x -> x==true, group, sortby=:tbv)
+   @test all( id .== [3,1] )
+   id = selectid(:male => x -> x==true, group, sortby=:tbv, rev=false)
+   @test all( id .== [1,3] )
+   id = selectid(:male => x -> x==true, group, sortby=:tbv, aliveonly=false)
+   @test all( id .== [3,1] )
+   id = selectid(:male => x -> x==true, group, sortby=:gebv)
+   @test all( id .== [3,1] )
+   id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y), group, sortby=:gebv)
+   @test all( id .== [3,1] )
+   id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=5.0, group, sortby=:gebv, allowempty=true)
+   @test all( id .== [] )
+end
+
+
+@testset "add_sires! and add_dams!" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=5,nf=5)
+   pop = generate_population(par)
+   hp_males = [3,2,4,5]
+   hp_females = [8,7,10,9]
+   pop_bulls = migrate_from_hp!(hp,pop,hp_males)
+   pop_dams = migrate_from_hp!(hp,pop,hp_females)
+   pop.df[2,:alive] = false
+   pop.df[7,:alive] = false
+   group = generate_group(pop, sires=pop_bulls[3:3], dams=pop_dams[2:2])
+
+   # capacity full
+   @test 0 == add_sires!(group,[1,2])
+   # extended
+   group.maxSire = 2
+   @test 1 == add_sires!(group,[1,2])
+   group.maxSire = 3
+   @test 0 == add_sires!(group,[1,3,1,2,3])
+   @test 0 == add_sires!(group,[5,6,7,8])
+   @test all( sort(group.sires) .==  [1,3])
+
+   # capacity full
+   @test 0 == add_dams!(group,[5,6,7])
+   # extended
+   group.maxDam = 2
+   @test 1 == add_dams!(group,[5,6,7])
+   group.maxDam = 3
+   @test 0 == add_dams!(group,[5,6,7])
+   group.maxDam = 4
+   @test 0 == add_dams!(group,[5,6,5,7,6,7])
+   @test 0 == add_dams!(group,[1,2,3,4])
+   @test all( sort(group.dams) .==  [5,6])
 end

@@ -90,12 +90,12 @@ function generate_population(par::PTParameters; nm::Int=0, nf::Int=0)
 end
 
 """
-    add_animal!(pop::PTPopulation)
+    add_new_animal!(pop::PTPopulation)
 
 Add an animal to population `pop`.
 The added animals lose the pedigree information.
 """
-function add_animal!(pop::PTPopulation, male::Bool, animal::PTAnimal; 
+function add_new_animal!(pop::PTPopulation, male::Bool, animal::PTAnimal; 
                      genotyped=false, year=0, alive=true, pregnant=false, sire=0, dam=0, siregroup=0, damgroup=0, inb=0.0, pbv=0.0, qbv=0.0, tbv=0.0, ebv=0.0, rel=missing, gebv=missing)
    pop.maxAnimal = pop.maxAnimal + 1
    (nrec,firsty,lasty,avgy) = get_phenotypic_information(animal.y)
@@ -105,10 +105,14 @@ function add_animal!(pop::PTPopulation, male::Bool, animal::PTAnimal;
    return nothing
 end
 
-function add_animal!(pop::PTPopulation, row::DataFrameRow{DataFrames.DataFrame,DataFrames.Index}, animal::PTAnimal)
+function add_new_animal!(pop::PTPopulation, row::DataFrameRow{DataFrames.DataFrame,DataFrames.Index}, animal::PTAnimal)
    pop.maxAnimal = pop.maxAnimal + 1
    (nrec,firsty,lasty,avgy) = get_phenotypic_information(animal.y)
-   push!(pop.df, row)
+   newdata = (id=pop.maxAnimal, male=row.male, year=row.year, alive=row.alive, pregnant=row.pregnant, genotyped=row.genotyped, 
+              sire=row.sire, dam=row.dam, siregroup=row.siregroup, damgroup=row.damgroup, nprog=0, nrecprog=0, 
+              inb=row.inb, pbv=row.pbv, qbv=row.qbv, tbv=row.tbv, ebv=row.ebv, gebv=row.gebv, rel=row.rel,
+              nrec=nrec, firsty=firsty, lasty=lasty, avgy=avgy)
+   push!(pop.df, newdata)
    push!(pop.animal, animal)
    return nothing
 end
@@ -146,7 +150,7 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
       end
       if hp.df[id,:alive]
          # new animal for the new population
-         add_animal!(pop, hp.df[id,:], hp.animal[id])
+         add_new_animal!(pop, hp.df[id,:], hp.animal[id])
          pop.df[pop.maxAnimal,:id] = pop.maxAnimal
          # moved
          hp.df[id,:alive] = false
@@ -199,22 +203,32 @@ function assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Int)
 end
 
 # new group with founder males and females
-function generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vector{Int}=Int[])
-   nsires = length(sires)
-   ndams = length(dams)
+function generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vector{Int}=Int[], aliveonly::Bool=true)
+   check_idlist(sires)
+   check_idlist(dams)
+
+   if aliveonly
+      sirelist = sires[map(x->pop.df[x,:alive],sires)]
+      damlist = dams[map(x->pop.df[x,:alive],dams)]
+   else
+      sirelist = sires
+      damlist = dams
+   end
+
+   nsires = length(sirelist)
+   ndams = length(damlist)
    hassire = ifelse(nsires>0, true, false)
-   hasdam = ifelse(length(dams)>0, true, false)
+   hasdam = ifelse(ndams>0, true, false)
    if !hassire && !hasdam
       throw(ArgumentError("no sire and dam lists"))
    end
-   check_idlist(sires)
-   check_idlist(dams)
+  
    n = nsires + ndams
    pop.maxGroup = pop.maxGroup + 1
-   idlist = [sires; dams]
+   idlist = [sirelist; damlist]
    sort!(idlist)
    generation = zeros(Int,n)
-   return PTGroup(pop, pop.maxGroup, n, nsires, ndams, sires, dams, idlist, generation)
+   return PTGroup(pop, pop.maxGroup, n, nsires, ndams, sirelist, damlist, idlist, generation)
 end
 
 function check_idlist(idlist::Vector{Int})
@@ -335,4 +349,88 @@ function get_symbol_array(fun)
       symb = copy(fun[1])
    end
    return symb
+end
+
+"""
+    n = add_sires!(group::PTGroup, idlist::Vector{Int})
+
+Add animals to a sire list in `group`.
+The function reads the candidate list from the top, then adds the animal if it is not in the list.
+If the size of list reaches the maximum (defined by `maxSire` in the group structure), this function stops adding any more.
+It returns how many sires have been put into the sire list in the group.
+"""
+function add_sires!(group::PTGroup, idlist::Vector{Int}; verbose::Bool=false)
+   n = length(group.sires)
+   ntaken = 0
+   @inbounds for i=1:length(idlist)
+      candidate = idlist[i]
+      if n>=group.maxSire
+         break
+      end
+      if candidate>0
+         if !group.pop.df[candidate,:alive]
+            if verbose
+               @warn "culled sire $(candidate); skip."
+            end
+            continue
+         end
+         if !in(candidate,group.sires) && group.pop.df[candidate,:male]
+            push!(group.sires,candidate)
+            n = n + 1
+            ntaken = ntaken + 1
+            if !in(candidate,group.id)
+               push!(group.id,candidate)
+               push!(group.generation,0)
+            end
+         end
+      end
+   end
+   group.n = length(group.id)
+   return ntaken
+end
+
+function add_sires!(group::PTGroup, id::Int; verbose::Bool=false)
+   return add_sires!(group, [id], verbose=verbose)
+end
+
+"""
+    n = add_dams!(group::PTGroup, idlist::Vector{Int})
+
+Add animals to a sire list in `group`.
+The function reads the candidate list from the top, then adds the animal if it is not in the list.
+If the size of list reaches the maximum (defined by `maxDam` in the group structure), this function stops adding any more.
+It returns how many dams have been taken.
+"""
+function add_dams!(group::PTGroup, idlist::Vector{Int}; verbose::Bool=false)
+   n = length(group.dams)
+   ntaken = 0
+   @inbounds for i=1:length(idlist)
+      candidate = idlist[i]
+      if n>=group.maxDam
+         break
+      end
+      if candidate>0
+         if !group.pop.df[candidate,:alive]
+            if verbose
+               @warn "culled dam $(candidate); skip."
+            end
+            continue
+         end
+         if !in(candidate,group.dams) && !group.pop.df[candidate,:male]
+            push!(group.dams,candidate)
+            n = n + 1
+            ntaken = ntaken + 1
+            if !in(candidate,group.id)
+               push!(group.id,candidate)
+               push!(group.generation,0)
+            end
+         end
+      end
+   end
+   group.n = length(group.id)
+   return ntaken
+end
+
+function add_dams!(group::PTGroup, id::Int; verbose::Bool=false)
+   return add_dams!(group, [id], verbose=verbose)
 end
