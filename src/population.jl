@@ -331,7 +331,7 @@ function _selectid(fun, symb::Vector{Symbol}, df::DataFrame; idlist::Vector{Int}
    if sortby==:id
       ret_id = selected_id
    elseif sortby==:random
-      ret_id = randperm(selected_id)
+      ret_id = shuffle(selected_id)
    else
       perm = sortperm(df[selected_id,sortby],rev=rev)
       ret_id = selected_id[perm]
