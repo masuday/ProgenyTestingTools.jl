@@ -452,3 +452,39 @@ The number of vacant dams to be filled.
 function vacancy_for_dams(group)
    return group.maxDam - length(group.dams)
 end
+
+"""
+    n = cull!(pop::PTPopulation, idlist::Vector{Int})
+    n = cull!(group::PTGroup, idlist::Vector{Int})
+
+Remove the animal IDs in `idlist` from population `pop` or group `group`.
+Returns the number of culled animals, `n`.
+With `group`, the animals will also be removed from the population.
+The status of the animals becomes "dead", i.e., `alive=false`.
+"""
+function cull!(pop::PTPopulation,idlist::Vector{Int})
+   nculled = 0
+   @inbounds for i in idlist
+      if 0<i && i<=pop.maxAnimal && pop.df[i,:alive]
+         pop.df[i,:alive] = false
+         nculled = nculled + 1
+      end
+   end
+   return nculled
+end
+
+function cull!(group::PTGroup,idlist::Vector{Int})
+   pop = group.pop
+   nculled = cull!(pop,idlist)
+   setdiff!(group.sires,idlist)
+   setdiff!(group.dams,idlist)
+   return nculled
+end
+
+function cull!(groups::Vector{PTGroup},idlist::Vector{Int})
+   nculled = 0
+   for group in groups
+      nculled = nculled + cull!(group,idlist)
+   end
+   return nculled
+end

@@ -329,3 +329,37 @@ end
    @test all( sort(group.dams) .==  [5,6])
    @test vacancy_for_dams(group) == 2
 end
+
+@testset "cull!" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=5,nf=5)
+   pop = generate_population(par)
+   hp_males = [3,2,4,5]
+   hp_females = [8,7,10,9]
+   pop_bulls = migrate_from_hp!(hp,pop,hp_males)
+   pop_dams = migrate_from_hp!(hp,pop,hp_females)
+   cull!(pop,[2,7])
+   @test !pop.df[2,:alive] && !pop.df[7,:alive]
+   group = generate_group(pop, sires=pop_bulls[3:3], dams=pop_dams[2:2])
+
+   group.maxSire = 3
+   @test 2 == add_sires!(group,[1,2,3,4])
+   @test all( sort(group.sires) .==  [1,3,4])
+   @test 1 == cull!(group,[1])
+   @test all( sort(group.sires) .==  [3,4])
+   @test vacancy_for_sires(group) == 1
+   @test 1 == cull!(group,[2,3])
+   @test all( sort(group.sires) .==  [4])
+   @test vacancy_for_sires(group) == 2
+   @test 1 == cull!(group,[1,2,3,4,3,2,1])
+   @test vacancy_for_sires(group) == 3
+
+   group.maxDam = 4
+   @test 2 == add_dams!(group,[5,6,7,8])
+   @test all( sort(group.dams) .==  [5,6,8])
+   @test 0 == cull!(group,[1])
+   @test 0 == cull!(group,[1,2])
+   @test 2 == cull!(group,[1,2,5,6])
+   @test all( sort(group.dams) .==  [8])
+   @test vacancy_for_dams(group) == 3
+end
