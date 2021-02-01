@@ -7,6 +7,7 @@ using LinearAlgebra
 
 using CSV
 using DataFrames
+using OffsetArrays
 using SparseMatrixDicts
 using IterativeSolvers
 

@@ -363,3 +363,14 @@ end
    @test all( sort(group.dams) .==  [8])
    @test vacancy_for_dams(group) == 3
 end
+
+@testset "pedigree list" begin
+   sires = [0,0,1,1,3,1,5]
+   dams = [0,0,0,2,2,4,6]
+   pedlist = ProgenyTestingTools.get_pedigree_list(sires,dams)
+   f = ProgenyTestingTools.kernel_meuwissen_and_luo!(Float64, pedlist)
+   ref_f = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.15625]
+   @test f ≈ ref_f
+   g = ProgenyTestingTools.get_inbreeding(sires,dams)
+   @test g ≈ ref_f
+end

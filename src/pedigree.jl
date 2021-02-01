@@ -20,8 +20,8 @@ end
 Calculate inbreeding coeffcients out of pedigree arrays.
 """
 function get_inbreeding(sires::Vector{Int}, dams::Vector{Int})
-   pedlist = ProgenyTestingSimulators.get_pedigree_list(sires,dams)
-   f = ProgenyTestingSimulators.kernel_meuwissen_and_luo!(Float64, pedlist)
+   pedlist = get_pedigree_list(sires,dams)
+   f = kernel_meuwissen_and_luo!(Float64, pedlist)
    return f
 end
 
@@ -31,7 +31,7 @@ end
 Convert two pedigree vectors to a pedigree matrix.
 """
 function get_pedigree_list(sires::Vector{Int}, dams::Vector{Int})
-   if length(sires) == length(dams)
+   if length(sires) != length(dams)
       throw(ArgumentError("unequal size of sire and dam vectors"))
    end
    n = length(sires)
