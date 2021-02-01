@@ -146,6 +146,7 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
       if hp.df[id,:alive]
          # new animal for the new population
          add_animal!(pop, hp.df[id,:], hp.animal[id])
+         pop.df[pop.maxAnimal,:id] = pop.maxAnimal
          # moved
          hp.df[id,:alive] = false
          # assigned new id
@@ -166,7 +167,7 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
       #end
    end
    # assign year
-   assign_year!(pop, idlist, year::Vector{Int})
+   assign_year!(pop, idlist, year)
    return newidlist
 end
 
@@ -182,7 +183,7 @@ function assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Vector{Int})
    j = 1
    @inbounds for i in idlist
       if 0<i && i<=pop.maxAnimal
-         pop.year[i] = year[j]
+         pop.df[i,:year] = year[j]
          j = j + 1
          if j>m
             j = 1
@@ -197,22 +198,22 @@ function assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Int)
 end
 
 # new group with founder males and females
-function generate_group(pop::PTPopulation; sirelist::Vector{Int}=Int[], damlist::Vector{Int}=Int[])
-   nsire = length(sirelist)
-   ndam = length(damlist)
-   hassire = ifelse(nsire>0, true, false)
-   hasdam = ifelse(length(damlist)>0, true, false)
+function generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vector{Int}=Int[])
+   nsires = length(sires)
+   ndams = length(dams)
+   hassire = ifelse(nsires>0, true, false)
+   hasdam = ifelse(length(dams)>0, true, false)
    if !hassire && !hasdam
       throw(ArgumentError("no sire and dam lists"))
    end
-   check_idlist(sirelist)
-   check_idlist(damlist)
-   n = nsire + ndam
+   check_idlist(sires)
+   check_idlist(dams)
+   n = nsires + ndams
    pop.maxGroup = pop.maxGroup + 1
-   idlist = [sirelist; damlist]
+   idlist = [sires; dams]
    sort!(idlist)
    generation = zeros(Int,n)
-   return PTGroup(pop, pop.maxGroup, n, nsire, ndam, sirelist, damlist, idlist, generation)
+   return PTGroup(pop, pop.maxGroup, n, nsires, ndams, sires, dams, idlist, generation)
 end
 
 function check_idlist(idlist::Vector{Int})
