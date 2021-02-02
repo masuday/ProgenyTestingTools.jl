@@ -255,6 +255,15 @@ end
    @test all( id .== [3,1] )
    id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=5.0, pop, sortby=:gebv, allowempty=true)
    @test all( id .== [] )
+   # limit
+   id = selectid(:male => x -> x==false, pop, limit=2)
+   @test all( id .== [5,6] )
+   id = selectid(:male => x -> x==false, pop, limit=4)
+   @test all( id .== [5,6,8] )
+   id = selectid(:male => x -> x==false, pop, limit=1, aliveonly=false)
+   @test all( id .== [5] )
+   id = selectid(:male => x -> x==false, pop, limit=4, aliveonly=false)
+   @test all( id .== [5,6,7,8] )
 end
 
 @testset "selectid from group" begin
@@ -307,6 +316,17 @@ end
    @test all( id .== [3,1] )
    id = selectid([:male,:gebv] => (x,y) -> x==true && !ismissing(y) && y>=5.0, group, sortby=:gebv, allowempty=true)
    @test all( id .== [] )
+   # limit
+   id = selectid(:male => x -> x==false, group, limit=1, aliveonly=false)
+   @test all( id .== [5] )
+   id = selectid(:male => x -> x==false, group, limit=2, aliveonly=false)
+   @test all( id .== [5,6] )
+   id = selectid(:male => x -> x==true, group, limit=2, sortby=:tbv, aliveonly=false)
+   @test all( id .== [2,3] )
+   id = selectid(:male => x -> x==true, group, limit=1, sortby=:tbv, aliveonly=false)
+   @test all( id .== [2] )
+   id = selectid(:male => x -> x==true, group, limit=4, sortby=:tbv, aliveonly=false)
+   @test all( id .== [2,3,1] )
 
    # removed dead individuals
    group = generate_group(pop, sires=pop_bulls[1:3], dams=pop_dams[1:3], aliveonly=true)
