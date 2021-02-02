@@ -141,7 +141,7 @@ function generate_and_add_animal!(group::PTGroup, s::Int, d::Int, sgroup::Int, d
    pop = group.pop
  
    # pedigree-based (polygenic) breeding valur
-   pa = (pop.df.pbv[s] + pop.df.pbv[d])/2
+   pa = (pop.df[s,:pbv] + pop.df[d,:pbv])/2
    ms = get_ms_deviation(pop.df.inb[s], pop.df.inb[d], var_a)
    pbv = pa + ms
 
