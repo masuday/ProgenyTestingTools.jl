@@ -1,10 +1,9 @@
 # functions for pedigree
 
 """
-    update_inbreeding!(sires, dams, f)
     update_inbreeding!(pop)
 
-Interenal routine.
+Calculate inbreeding coeffcients for individuals in the population.
 """
 function update_inbreeding!(sires::Vector{Int}, dams::Vector{Int}, inb::Vector{Float64})
    f = get_inbreeding(sires, dams)
