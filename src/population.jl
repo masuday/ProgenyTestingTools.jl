@@ -273,13 +273,18 @@ function selectid(fun, pop::PTPopulation; idlist::Vector{Int}=Int[], aliveonly::
 end
 
 # for groups
-function selectid(fun, group::PTGroup; aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
+function selectid(fun, group::PTGroup; idlist::Vector{Int}=Int[], aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
    # symbols
    symb = get_symbol_array(fun)
    if !in(:alive,symb); push!(symb,:alive); end
    if !in(:id,symb);    push!(symb,:id);    end
 
-   return _selectid(fun, symb, group.pop.df, idlist=group.id, aliveonly=aliveonly, sortby=sortby, rev=rev, allowempty=allowempty)
+   if isempty(idlist)
+      return _selectid(fun, symb, group.pop.df, idlist=group.id, aliveonly=aliveonly, sortby=sortby, rev=rev, allowempty=allowempty)
+   else
+      unique_id = sort(unique(intersect(idlist,group.id)))
+      return _selectid(fun, symb, group.pop.df, idlist=unique_id, aliveonly=aliveonly, sortby=sortby, rev=rev, allowempty=allowempty)
+   end
 end
 
 function selectid_general(fun, group::PTGroup; idlist::Vector{Int}=Int[], aliveonly::Bool=true, sortby::Symbol=:id, rev::Bool=true, allowempty::Bool=true)
@@ -291,7 +296,7 @@ function selectid_general(fun, group::PTGroup; idlist::Vector{Int}=Int[], aliveo
    # including :generation
    if in(:generation,symb)
       if length(idlist)>0
-         unique_id = sort(unique(intersection(idlist,group.id)))
+         unique_id = sort(unique(intersect(idlist,group.id)))
          df = pop.df[unique_id,symb]
          df[:,:generation] = group.generation[unique_id]
       else
@@ -300,7 +305,7 @@ function selectid_general(fun, group::PTGroup; idlist::Vector{Int}=Int[], aliveo
       end
    else
       if length(idlist)>0
-         unique_id = sort(unique(intersection(idlist,group.id)))
+         unique_id = sort(unique(intersect(idlist,group.id)))
          df = group.pop.df[unique_id,symb]
       else
          df = group.pop.df[group.id,symb]
@@ -352,7 +357,7 @@ function get_symbol_array(fun)
    return symb
 end
 
-# random selection
+# random sampling
 function random_sampling(pop::PTPopulation, n::Int; male::Bool=false, female::Bool=false, aliveonly::Bool=true, allowempty::Bool=true)
    if male && female
       idlist = selectid([:id] => x->x>0, pop, aliveonly=aliveonly, sortby=:random, allowempty=allowempty)
@@ -370,6 +375,35 @@ function random_sampling(pop::PTPopulation, n::Int; male::Bool=false, female::Bo
    else
       error("too few sampled individuals")
    end
+end
+
+function random_sampling(pop::PTPopulation; nm::Int=0, nf::Int=0, aliveonly::Bool=true, allowempty::Bool=true)
+   if nm>0
+      mlist = selectid([:male] => x->x==true, pop, aliveonly=aliveonly, sortby=:random, allowempty=allowempty)
+      if length(mlist)>=nm
+         return mlist[1:nm]
+      elseif allowempty
+         return mlist
+      else
+         error("too few sampled individuals")
+      end
+   else
+      mlist = Int[]
+   end
+   if nf>0
+      flist = selectid([:male] => x->x==!true, pop, aliveonly=aliveonly, sortby=:random, allowempty=allowempty)
+      if length(flist)>=nf
+         return flist[1:nf]
+      elseif allowempty
+         return flist
+      else
+         error("too few sampled individuals")
+      end
+   else
+      flist = Int[]
+   end
+   idlist = [mlist; flist]
+   return idlist
 end
 
 """

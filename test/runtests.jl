@@ -1,5 +1,6 @@
 using ProgenyTestingTools
 using Test
+using Random
 
 @testset "parameters" begin
    # no repeatability
@@ -91,6 +92,60 @@ end
    @test hp.df[8,:tbv] ≈ pop.df[2,:tbv]
    @test pop.df[!,:id] ≈ [1,2]
    @test pop.maxAnimal == 2
+end
+
+@testset "random_sampling" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=10,nf=10)
+   cull!(hp,[10,20])
+
+   # male only
+   idlist = random_sampling(hp, 10, male=true, aliveonly=true, allowempty=true)
+   @test all( sort(idlist) .== [1,2,3,4,5,6,7,8,9] )
+   @test_throws ErrorException random_sampling(hp, 10, male=true, aliveonly=true, allowempty=false)
+   idlist = random_sampling(hp, 10, male=true, aliveonly=false, allowempty=true)
+   @test all( sort(idlist) .== [1,2,3,4,5,6,7,8,9,10] )
+   ntests = 100
+   ntested = 0
+   for i in 1:ntests
+      idlist = random_sampling(hp, 5, male=true, aliveonly=true, allowempty=true)
+      if sum(map(x->in(x,[1,2,3,4,5,6,7,8,9]),idlist))==5
+         ntested = ntested + 1
+      end
+   end
+   @test ntests == ntested
+
+   # female only
+   idlist = random_sampling(hp, 10, female=true, aliveonly=true, allowempty=true)
+   @test all( sort(idlist) .== [11,12,13,14,15,16,17,18,19] )
+   @test_throws ErrorException random_sampling(hp, 10, female=true, aliveonly=true, allowempty=false)
+   idlist = random_sampling(hp, 10, female=true, aliveonly=false, allowempty=true)
+   @test all( sort(idlist) .== [11,12,13,14,15,16,17,18,19,20] )
+   ntests = 100
+   ntested = 0
+   for i in 1:ntests
+      idlist = random_sampling(hp, 5, female=true, aliveonly=true, allowempty=true)
+      if sum(map(x->in(x,[11,12,13,14,15,16,17,18,19]),idlist))==5
+         ntested = ntested + 1
+      end
+   end
+   @test ntests == ntested
+
+   # male and female
+   idlist = random_sampling(hp, 20, male=true, female=true, aliveonly=true, allowempty=true)
+   @test all( sort(idlist) .== [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19] )
+   @test_throws ErrorException random_sampling(hp, 20, male=true, female=true, aliveonly=true, allowempty=false)
+   idlist = random_sampling(hp, 20, male=true, female=true, aliveonly=false, allowempty=true)
+   @test all( sort(idlist) .== [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] )
+   ntests = 100
+   ntested = 0
+   for i in 1:ntests
+      idlist = random_sampling(hp, 15, male=true, female=true, aliveonly=true, allowempty=true)
+      if sum(map(x->in(x,[1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19]),idlist))==15
+         ntested = ntested + 1
+      end
+   end
+   @test ntests == ntested
 end
 
 @testset "assign_year" begin
@@ -364,7 +419,7 @@ end
    @test vacancy_for_dams(group) == 3
 end
 
-@testset "pedigree list" begin
+@testset "pedigree list and inbreeding" begin
    sires = [0,0,1,1,3,1,5]
    dams = [0,0,0,2,2,4,6]
    pedlist = ProgenyTestingTools.get_pedigree_list(sires,dams)
@@ -373,4 +428,59 @@ end
    @test f ≈ ref_f
    g = ProgenyTestingTools.get_inbreeding(sires,dams)
    @test g ≈ ref_f
+
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=3,nf=4)
+   hp.df[:,:male] = [true,false,true,false,true,false,true]
+   hp.df[:,:sire] = sires
+   hp.df[:,:dam] = dams
+   update_inbreeding!(hp)
+   @test hp.df[:,:inb] ≈ ref_f
+end
+
+@testset "mating between groups! (dairy_standard_ai)" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=10,nf=10)
+   pop = generate_population(par)
+   bulls1 = migrate_from_hp!(hp,pop,random_sampling(hp,4,male=true))
+   bulls2 = migrate_from_hp!(hp,pop,random_sampling(hp,4,male=true))
+   cows = migrate_from_hp!(hp,pop,random_sampling(hp,8,female=true))
+   mgroup1 = generate_group(pop, sires=bulls1)
+   mgroup2 = generate_group(pop, sires=bulls2)
+   fgroup = generate_group(pop, dams=cows)
+   for i=1:4
+      mating!(mgroup1, fgroup, "fgroup", n=1, method="dairy_standard_ai", plan="once_per_female", calving=false)
+   end
+   mating!(mgroup2, fgroup, "fgroup", n="all", method="dairy_standard_ai", plan="once_per_female", calving=false)
+
+   # find progeny from sires in mgroup
+   # extract sire group 1 by x->x[1]==mgroup1.gid
+   @test all(fgroup.generation[9:16] .== 1)
+   prog_id = selectid([:siregroup] => x->x==mgroup1.groupid, fgroup)
+   @test all( (17 .<= prog_id) .& (prog_id .<= 20) )
+   prog_id = selectid([:siregroup] => x->x==mgroup2.groupid, fgroup)
+   @test all( (21 .<= prog_id) .& (prog_id .<= 24) )
+
+   @test length(selectid([:pregnant] => x->x==true, pop))==8
+   calving!(fgroup)
+   @test length(selectid([:pregnant] => x->x==true, pop))==0
+
+   # once more
+   mgroup3 = copy_group(mgroup1)
+   mgroup4 = copy_group(mgroup2)
+   fgroup.dams .= sort(shuffle(17:24)[1:8])
+   for i=1:4
+      mating!(mgroup3, fgroup, "fgroup", n=1, method="dairy_standard_ai", plan="once_per_female", calving=false)
+   end
+   mating!(mgroup4, fgroup, "fgroup", n="all", method="dairy_standard_ai", plan="once_per_female", calving=false)
+
+   @test all(fgroup.generation[17:24] .== 2)
+   prog_id = selectid([:siregroup] => x->x==mgroup3.groupid, fgroup)
+   @test all( (25 .<= prog_id) .& (prog_id .<= 28) )
+   prog_id = selectid([:siregroup] => x->x==mgroup4.groupid, fgroup)
+   @test all( (29 .<= prog_id) .& (prog_id .<= 32) )
+
+   @test length(selectid([:pregnant] => x->x==true, pop))==8
+   calving!(fgroup)
+   @test length(selectid([:pregnant] => x->x==true, pop))==0
 end

@@ -36,9 +36,9 @@ function mating!(mgroup::PTGroup, fgroup::PTGroup, progeny="fgroup";
       error("invalid argument progeny=$(progeny)")
    end
 
-   sgroup = mgroup.gid
-   dgroup = fgroup.gid
-   non_pregnant_dams = selectid([:pregnant] => x->x==false, fgroup)
+   sgroup = mgroup.groupid
+   dgroup = fgroup.groupid
+   non_pregnant_dams = selectid([:pregnant] => x->x==false, fgroup, idlist=fgroup.dams)
    if typeof(n) == String
       if n=="all"
          ndams = length(non_pregnant_dams)
@@ -63,7 +63,7 @@ function mating!(mgroup::PTGroup, fgroup::PTGroup, progeny="fgroup";
 
    # keep the pregnancy status
    if !calving
-      fgroup.pop.df[pregnant_dams,:pregnant] = true
+      fgroup.pop.df[pregnant_dams,:pregnant] .= true
    end
 
    # update inbreeding
@@ -103,7 +103,7 @@ function _mating_dairy_standard_ai!(group::PTGroup, sires::Vector{Int}, dams::Ve
                generate_and_add_animal!(group, s, d, sgroup, dgroup, male, gen, year, var_a, var_g, var_g_sim)
                nai = nai + 1
             end
-            if nai>n
+            if nai>=n
                break
             end
          end
@@ -116,7 +116,7 @@ function _mating_dairy_standard_ai!(group::PTGroup, sires::Vector{Int}, dams::Ve
                generate_and_add_animal!(group, s, d, sgroup, dgroup, male, gen, year, var_a, var_g, var_g_sim)
                nai = nai + 1
             end
-            if nai>n
+            if nai>=n
                break
             end
          end
@@ -141,8 +141,8 @@ function generate_and_add_animal!(group::PTGroup, s::Int, d::Int, sgroup::Int, d
    pop = group.pop
  
    # pedigree-based (polygenic) breeding valur
-   pa = (pop.pbv[s] + pop.pbv[d])/2
-   ms = get_ms_deviation(pop.inb[s], pop.inb[d], var_a)
+   pa = (pop.df.pbv[s] + pop.df.pbv[d])/2
+   ms = get_ms_deviation(pop.df.inb[s], pop.df.inb[d], var_a)
    pbv = pa + ms
 
    # QTL-based breeding value
