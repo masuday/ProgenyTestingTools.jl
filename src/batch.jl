@@ -38,10 +38,37 @@ function cull_old_bulls!(bull_stud,birth_year_of_culled_bulls)
 end
 
 function cull_old_cows!(herds,birth_year_of_culled_cows)
-   n_herd = length(herds)
+   n_herds = length(herds)
    nculled = 0
    for h=1:n_herds
       nculled = nculled + cull!(herds[h], selectid([:male,:year] => (x,y) -> x==false && y==birth_year_of_culled_cows, herds[h]))
    end
    return nculled
+end
+
+function mean_inbreeding(pop; year::Int=-1)
+   if year>=0
+      return mean(pop.df[pop.df[:,:year].==year, :inb])
+   else
+      return mean(pop.df[:, :inb])
+   end
+end
+
+function number_of_active_females(herd::PTGroup)
+   females = selectid([:male]=>x->x==false, herd, aliveonly=true)
+   nheifers = length(setdiff(females, herd.dams))
+   ndams = length(herd.dams)
+   return ndams,nheifers
+end
+
+function number_of_active_females(herds::Vector{PTGroup})
+   n_herds = length(herds)
+   ndams = 0
+   nheifers = 0
+   for h=1:n_herds
+      (nd,nh) = number_of_active_females(herds[h])
+      nheifers = nheifers + nh
+      ndams = ndams + nd
+   end
+   return ndams,nheifers
 end
