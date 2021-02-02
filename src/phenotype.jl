@@ -8,7 +8,7 @@ If `gen` is `"all"` or a negative integer, this function gives all animals in th
 By default, only females have phenotypes (`male=false` and `female=true`).
 Also, an animal can have multiple (repeated records) due to `repeated=true`.
 """
-function assign_phenotype!(group::PTGroup, gen::Union{Int,String}="all"; male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false)
+function assign_phenotype!(group::PTGroup; gen::Union{Int,String}="all", male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false, limit::Int=100)
    pop = group.pop
    par = group.pop.par
    if typeof(gen) == String
@@ -53,14 +53,14 @@ function assign_phenotype!(group::PTGroup, gen::Union{Int,String}="all"; male::B
    return nothing
 end
 
-function assign_phenotype!(groups::Vector{PTGroup}, gen::Union{Int,String}="all"; male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false)
+function assign_phenotype!(groups::Vector{PTGroup}; gen::Union{Int,String}="all", male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false, limit::Int=100)
    for group in groups
-      assign_phenotype!(group, gen, male=false, female=true, year=-1, repeated=repeated, verbose=false)
+      assign_phenotype!(group, gen=gen, male=false, female=true, year=-1, repeated=repeated, verbose=false)
    end
    return nothing
 end
 
-function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{Int,Int}, male::Bool, female::Bool, repeated::Bool)
+function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{Int,Int}, male::Bool, female::Bool, repeated::Bool, limit::Int=100)
    pop = group.pop
    par = group.pop.par
 
@@ -81,7 +81,7 @@ function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{I
       cg = cglist[gen]
       animal = pop.animal[id]
       nrec = length(animal.y)
-      if nrec==0 || (nrec>=1 && repeated)
+      if (nrec==0 || (nrec>=1 && repeated)) && nrec<=limit
          tbv = pop.df[id,:tbv]
          if nrec==0
             this_pe = sd_pe*randn()
