@@ -7,6 +7,7 @@ using SparseArrays
 using LinearAlgebra
 
 using CSV
+using QMSimFiles
 using DataFrames
 using OffsetArrays
 using SparseMatrixDicts
@@ -51,8 +52,8 @@ mutable struct PTPopulation
    maxCG::Int
    df::DataFrame
    animal::Vector{PTAnimal}
-#   map::Union{Nothing,QMSimMap}
-#   gfile::String
+   map::Union{Nothing,QMSimMap}
+   gfile::String
 end
 
 # group: a subset of the population

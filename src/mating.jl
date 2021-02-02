@@ -146,16 +146,16 @@ function generate_and_add_animal!(group::PTGroup, s::Int, d::Int, sgroup::Int, d
    pbv = pa + ms
 
    # QTL-based breeding value
-   #if pop.genotyped[s] && pop.genotyped[d]
-      #gs = read_qmsim_individual_hdf5(pop.map,pop.gfile,s)
-      #gd = read_qmsim_individual_hdf5(pop.map,pop.gfile,d)
-      #ga = mating(pop.map,gs,gd)
-      #qbv = sqrt(var_g/var_g_sim)*ga.tbv
-      #hassnp = true
-   #else
+   if pop.df[s,:genotyped] && pop.df[d,:genotyped]
+      gs = read_qmsim_individual_hdf5(pop.map,pop.gfile,s)
+      gd = read_qmsim_individual_hdf5(pop.map,pop.gfile,d)
+      ga = mating(pop.map,gs,gd)
+      qbv = sqrt(var_g/var_g_sim)*ga.tbv
+      hassnp = true
+   else
       qbv = sqrt(var_g)*randn()  # just a random number
       hassnp = false
-   #end
+   end
 
    # total breeding values
    tbv = pbv + qbv
@@ -169,9 +169,9 @@ function generate_and_add_animal!(group::PTGroup, s::Int, d::Int, sgroup::Int, d
 
    # add to population
    add_new_animal!(pop, male, animal, year=year, sire=s, dam=d, siregroup=sgroup, damgroup=dgroup, inb=0.0, pbv=pbv, qbv=qbv, tbv=tbv, ebv=0.0, gebv=missing, genotyped=hassnp)
-   #if hassnp
-   #   add_qmsim_individual_hdf5(pop.map,pop.gfile,ga)
-   #end
+   if hassnp
+      add_qmsim_individual_hdf5(pop.map,pop.gfile,ga)
+   end
 
    # add to group
    group.n = group.n + 1

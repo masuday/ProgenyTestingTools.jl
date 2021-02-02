@@ -15,19 +15,19 @@ defines the genetic architecture. Also, you should provide `gfile` to store
 gennotypes that going to be generated in simulation.
 ```
 # hostorical population with 5 males and 10 females
-hp = generate_population(par, 5, 10)
+hp = generate_population(par, nm=5, nf=10)
 
 # hostorical population with genotypes
-hp = generate_population(par, "qmsimdata.h5", 5, 10)
+hp = generate_population(par, "qmsimdata.h5", nm=5, nf=10)
 
 # new population with no animals
 pop = generate_population(par)
 
 # new population with genotypes
-pop = generate_population(par, "qmsimdata.h5", 0, 0, gfile="pop.h5")
+pop = generate_population(par, "qmsimdata.h5", nm=0, nf=0, gfile="pop.h5")
 ```
 """
-function generate_population(par::PTParameters; nm::Int=0, nf::Int=0)
+function generate_population(par::PTParameters; nm::Int=0, nf::Int=0, map=nothing, gfile="")
    # check parameters
    check_parameters(par)
 
@@ -86,7 +86,33 @@ function generate_population(par::PTParameters; nm::Int=0, nf::Int=0)
       push!(animal, PTAnimal(cg,y,pe,e))
    end
 
-   return PTPopulation(par,hp,maxAnimal,maxGroup,maxCG,df,animal) #,map,h5file)
+   # genomic data file created by QMSim/QMSimFiles
+   if gfile==""
+      h5file = "snp_"*randstring(4)*".h5"
+   else
+      h5file = gfile
+   end
+
+   return PTPopulation(par,hp,maxAnimal,maxGroup,maxCG,df,animal,map,h5file)
+end
+
+function generate_population(par::PTParameters, qmsimfile::String; nm::Int=0, nf::Int=0, map=nothing, gfile="")
+   map = read_qmsim_map_hdf5(qmsimfile)
+   pop = generate_population(par, nm=nm, nf=nf, map=map, gfile=gfile)
+   pop.genotyped .= true
+   if nm>0 || nf>0
+      if gfile==qmsimfile
+         @info "hostorical population: qmsimfile is the same as gfile."
+      else
+         throw(ArgumentError("For a historical population, qmsimfile must be the same as gfile."))
+      end
+   else
+      if gfile==qmsimfile
+         throw(ArgumentError("gfile must be provided as a different file as qmsimfile."))
+      end
+      create_qmsim_map_hdf5(map, pop.gfile)
+   end
+   return pop
 end
 
 """
@@ -163,14 +189,14 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
 
       # (hp) id to (pop) pop.maxAnimal
       # assigned new genotypes
-      #if hp.genotyped[id]
-      #   # copy genotypes from the database
-      #   g = read_qmsim_individual_hdf5(hp.map,hp.gfile,id)
-      #   add_qmsim_individual_hdf5(pop.map,pop.gfile,g)
-      #   pop.genotyped[pop.maxAnimal] = true
-      #   pop.qbv[pop.maxAnimal] = g.tbv
-      #   pop.tbv[pop.maxAnimal] = pop.pbv[pop.maxAnimal] + pop.qbv[pop.maxAnimal]
-      #end
+      if hp.df[id,:genotyped]
+         # copy genotypes from the database
+         g = read_qmsim_individual_hdf5(hp.map,hp.gfile,id)
+         add_qmsim_individual_hdf5(pop.map,pop.gfile,g)
+         pop.df[pop.maxAnimal,:genotyped] = true
+         pop.df[pop.maxAnimal,:qbv] = g.tbv
+         pop.df[pop.maxAnimal,:tbv] = pop.df[pop.maxAnimal,:pbv] + pop.df[pop.maxAnimal,:qbv]
+      end
    end
    # assign year
    assign_year!(pop, unique_idlist, year)
