@@ -1,6 +1,7 @@
 module ProgenyTestingTools
 
 using Random
+using Printf
 using Statistics
 using SparseArrays
 using LinearAlgebra
