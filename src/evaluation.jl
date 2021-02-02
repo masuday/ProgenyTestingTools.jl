@@ -158,7 +158,7 @@ function genetic_evaluation_blup!(pop::PTPopulation, datafile::String, pedfile::
    else
       sol = lhs \ rhs
    end
-   pop.ebv .= sol[1:pop.maxAnimal]
+   pop.df[:,:ebv] .= sol[1:pop.maxAnimal]
 end
 
 function build_mme(pop::PTPopulation, datafile::String, pedfile::String, repeated::Bool, cg::Bool; verbose::Bool=false)
