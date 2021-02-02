@@ -27,7 +27,7 @@ pop = generate_population(par)
 pop = generate_population(par, "qmsimdata.h5", nm=0, nf=0, gfile="pop.h5")
 ```
 """
-function generate_population(par::PTParameters; nm::Int=0, nf::Int=0, map=nothing, gfile="")
+function generate_population(par::PTParameters; nm::Int=0, nf::Int=0, map::Union{Nothing,QMSimMap}=nothing, gfile="")
    # check parameters
    check_parameters(par)
 
@@ -51,13 +51,20 @@ function generate_population(par::PTParameters; nm::Int=0, nf::Int=0, map=nothin
    tbv = zeros(Float64,maxAnimal)
    tbv .= pbv .+ qbv
 
+   # genotyping status
+   if isnothing(map)
+      genotyped = fill(false, maxAnimal)
+   else
+      genotyped = fill(true, maxAnimal)
+   end
+
    df = DataFrame(
       id = collect(1:maxAnimal),
       male = vcat([true for i=1:nm],[false for i=1:nf]),
       year = zeros(Int, maxAnimal),
       alive = fill(true, maxAnimal),
       pregnant = fill(false, maxAnimal),
-      genotyped = fill(false, maxAnimal),
+      genotyped = genotyped,
       sire = zeros(Int, maxAnimal),
       dam = zeros(Int, maxAnimal),
       siregroup = zeros(Int, maxAnimal),
@@ -86,23 +93,15 @@ function generate_population(par::PTParameters; nm::Int=0, nf::Int=0, map=nothin
       push!(animal, PTAnimal(cg,y,pe,e))
    end
 
-   # genomic data file created by QMSim/QMSimFiles
-   if gfile==""
-      h5file = "snp_"*randstring(4)*".h5"
-   else
-      h5file = gfile
-   end
-
-   return PTPopulation(par,hp,maxAnimal,maxGroup,maxCG,df,animal,map,h5file)
+   return PTPopulation(par,hp,maxAnimal,maxGroup,maxCG,df,animal,map,gfile)
 end
 
 function generate_population(par::PTParameters, qmsimfile::String; nm::Int=0, nf::Int=0, map=nothing, gfile="")
    map = read_qmsim_map_hdf5(qmsimfile)
-   pop = generate_population(par, nm=nm, nf=nf, map=map, gfile=gfile)
-   pop.df[:,:genotyped] .= true
    if nm>0 || nf>0
       if gfile==qmsimfile
          @info "hostorical population: qmsimfile is the same as gfile."
+         pop = generate_population(par, nm=nm, nf=nf, map=map, gfile=qmsimfile)
       else
          throw(ArgumentError("For a historical population, qmsimfile must be the same as gfile."))
       end
@@ -110,6 +109,13 @@ function generate_population(par::PTParameters, qmsimfile::String; nm::Int=0, nf
       if gfile==qmsimfile
          throw(ArgumentError("gfile must be provided as a different file as qmsimfile."))
       end
+      # genomic data file created by QMSim/QMSimFiles
+      if gfile==""
+         h5file = "snp_"*randstring(4)*".h5"
+      else
+         h5file = gfile
+      end
+      pop = generate_population(par, nm=nm, nf=nf, map=map, gfile=h5file)
       create_qmsim_map_hdf5(map, pop.gfile)
    end
    return pop
