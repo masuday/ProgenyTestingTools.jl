@@ -55,7 +55,7 @@ end
 
 function assign_phenotype!(groups::Vector{PTGroup}; gen::Union{Int,String}="all", male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false, limit::Int=100)
    for group in groups
-      assign_phenotype!(group, gen=gen, male=false, female=true, year=-1, repeated=repeated, verbose=false)
+      assign_phenotype!(group, gen=gen, male=male, female=female, year=year, repeated=repeated, verbose=verbose)
    end
    return nothing
 end
