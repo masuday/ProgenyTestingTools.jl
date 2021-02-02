@@ -70,6 +70,7 @@ end
 
 export PTParameters, PTAnimal, PTPopulation, PTGroup
 export check_parameters, get_var_poly, get_var_qtl, get_var_pe, get_var_error
+export assign_phenotype!
 export generate_population, migrate_from_hp!, generate_group, copy_group, add_new_animal!, 
        selectid, random_sampling, add_sires!, add_dams!, vacancy_for_sires, vacancy_for_dams, cull!
 export update_inbreeding!
@@ -77,6 +78,7 @@ export mating!, calving!
 
 include("parameter.jl")
 include("population.jl")
+include("phenotype.jl")
 include("pedigree.jl")
 include("mating.jl")
 

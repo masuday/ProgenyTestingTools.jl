@@ -484,3 +484,22 @@ end
    calving!(fgroup)
    @test length(selectid([:pregnant] => x->x==true, pop))==0
 end
+
+@testset "assign_phenotype!" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=10,nf=10)
+   pop = generate_population(par)
+   bulls = migrate_from_hp!(sampling(hp, n=4, male=true, female=false, method="random"), hp, pop)
+   cows  = migrate_from_hp!(sampling(hp, n=4, male=false, female=true, method="random"), hp, pop)
+   group = generate_group(pop, sires=bulls, dams=cows)
+   mating_within_group!(group, method="random")
+   mating_within_group!(group, method="random")
+   # make a group again to shift IDs
+   group = generate_group(pop, sires=bulls, dams=cows)
+   mating_within_group!(group, method="random")
+   assign_phenotype!(group, -1, repeated=true)
+   @test sum( map(x->length(x.cg), pop.animal) ) == sum(.!pop.male[group.id] )
+
+   assign_phenotype!(group, 1, repeated=true)
+   @test sum( map(x->length(x.cg), pop.animal) .>= 2 ) == sum(.!pop.male[group.id[group.generation .== 1]] )
+end
