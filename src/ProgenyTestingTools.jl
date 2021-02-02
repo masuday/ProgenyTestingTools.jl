@@ -77,6 +77,7 @@ export generate_population, migrate_from_hp!, generate_group, copy_group, add_ne
        selectid, random_sampling, add_sires!, add_dams!, vacancy_for_sires, vacancy_for_dams, cull!
 export update_inbreeding!
 export mating!, calving!
+export genetic_evaluation!, update_approximated_reliability!, write_files_for_blup
 
 include("parameter.jl")
 include("population.jl")
@@ -84,5 +85,6 @@ include("phenotype.jl")
 include("pedigree.jl")
 include("mating.jl")
 include("io.jl")
+include("evaluation.jl")
 
 end
