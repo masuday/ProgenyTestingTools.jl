@@ -99,8 +99,8 @@ end
 function generate_population(par::PTParameters, qmsimfile::String; nm::Int=0, nf::Int=0, map=nothing, gfile="")
    map = read_qmsim_map_hdf5(qmsimfile)
    if nm>0 || nf>0
-      if gfile==qmsimfile
-         @info "hostorical population: qmsimfile is the same as gfile."
+      if gfile==qmsimfile || gfile==""
+         @info "hostorical population: qmsimfile is the same as gfile, which will be read-only."
          pop = generate_population(par, nm=nm, nf=nf, map=map, gfile=qmsimfile)
       else
          throw(ArgumentError("For a historical population, qmsimfile must be the same as gfile."))
