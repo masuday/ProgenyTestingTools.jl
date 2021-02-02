@@ -509,4 +509,5 @@ end
    calving!(fgroup)
    assign_phenotype!(fgroup, gen=2, repeated=false)
    @test length(selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup)) == sum(.!pop.df[fgroup.id[fgroup.generation .== 2],:male] )
+   @test maximum(pop.df[selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup),:nrec])==1
 end
