@@ -68,6 +68,7 @@ mutable struct PTGroup
    generation::Vector{Int}
 end
 
+import Base: show, write
 export PTParameters, PTAnimal, PTPopulation, PTGroup
 export check_parameters, get_var_poly, get_var_qtl, get_var_pe, get_var_error
 export assign_phenotype!
@@ -81,5 +82,6 @@ include("population.jl")
 include("phenotype.jl")
 include("pedigree.jl")
 include("mating.jl")
+include("io.jl")
 
 end
