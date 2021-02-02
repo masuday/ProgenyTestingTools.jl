@@ -199,7 +199,7 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
       end
    end
    # assign year
-   assign_year!(pop, unique_idlist, year)
+   assign_year!(pop, newidlist, year)
    return newidlist
 end
 
