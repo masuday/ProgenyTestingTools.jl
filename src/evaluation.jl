@@ -18,7 +18,7 @@ This formula does not account for a change of genetic variance due to selection 
 If you provide an array for `rel`, this function will take it as individual reliability to generate GEBV.
 Note that, once GEBV is calculated, it will not be updated unless you have `updategebv=true`.
 """
-function genetic_evaluation!(pop::PTPopulation; method::String="blup", repeated::Bool=true, rel::Union{Vector{Float64},Float64}=0.5, verbose::Bool=false, 
+function genetic_evaluation!(pop::PTPopulation; method::String="blup", repeated::Bool=true, rel::Union{Vector{Union{Missing,Float64}},Float64}=0.5, verbose::Bool=false, 
    keep_file::Bool=false, updategebv::Bool=false, cg::Bool=false)
    if method=="blup"
       write_files_for_blup(pop, "phenotype.txt", "pedigree.txt", repeated=repeated)
@@ -58,12 +58,13 @@ end
    end
 end
 
-function genetic_evaluation_tbv!(pop::PTPopulation, rel::Vector{Float64}, updategebv::Bool)
+function genetic_evaluation_tbv!(pop::PTPopulation, rel::Vector{Union{Missing,Float64}}, updategebv::Bool)
    par = pop.par
    var_g = get_var_poly(par) + get_var_qtl(par)
    @inbounds for i=1:pop.maxAnimal
-      if !ismissing(rel[i]) && rel>0.0
-         var_error = ((1-max(rel[i],1.0))/max(rel[i],1.0)) * var_g
+      r = ifelse(ismissing(rel[i]),0.0,1.0)
+      if r>0.0
+         var_error = ((1-max(r,1.0))/max(r,1.0)) * var_g
       else
          var_error = 100*var_g
       end
@@ -90,8 +91,8 @@ function approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0)
    h2 = par.h2_poly + par.h2_qtl
    rep = par.rep
    k = (4-h2)/h2
-   ndau = pop.df[:,nrecprogeny]
-   nrec = pop.df[:,nrec]
+   ndau = pop.df[:,:nrecprog]
+   nrec = pop.df[:,:nrec]
    rel = zeros(pop.maxAnimal)
    @inbounds for i=1:pop.maxAnimal
       # very rough approximation; see VanRaden and Wiggans (1991) for strict methods
