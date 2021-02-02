@@ -32,3 +32,16 @@ function regular_mating!(bull_stud, herds, birthyear; method="random", updateinb
    end
    return n_pregnant   
 end
+
+function cull_old_bulls!(bull_stud,birth_year_of_culled_bulls)
+   return cull!(bull_stud, selectid([:male,:year] => (x,y) -> x==true && y==birth_year_of_culled_bulls, bull_stud))
+end
+
+function cull_old_cows!(herds,birth_year_of_culled_cows)
+   n_herd = length(herds)
+   nculled = 0
+   for h=1:n_herds
+      nculled = nculled + cull!(herds[h], selectid([:male,:year] => (x,y) -> x==false && y==birth_year_of_culled_cows, herds[h]))
+   end
+   return nculled
+end
