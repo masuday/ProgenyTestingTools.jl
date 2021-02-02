@@ -99,7 +99,7 @@ end
 function generate_population(par::PTParameters, qmsimfile::String; nm::Int=0, nf::Int=0, map=nothing, gfile="")
    map = read_qmsim_map_hdf5(qmsimfile)
    pop = generate_population(par, nm=nm, nf=nf, map=map, gfile=gfile)
-   pop.genotyped .= true
+   pop.df[:,:genotyped] .= true
    if nm>0 || nf>0
       if gfile==qmsimfile
          @info "hostorical population: qmsimfile is the same as gfile."

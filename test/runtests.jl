@@ -1,4 +1,5 @@
 using ProgenyTestingTools
+using QMSimFiles
 using Test
 using Random
 
@@ -510,4 +511,28 @@ end
    assign_phenotype!(fgroup, gen=2, repeated=false)
    @test length(selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup)) == sum(.!pop.df[fgroup.id[fgroup.generation .== 2],:male] )
    @test maximum(pop.df[selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup),:nrec])==1
+end
+
+@testset "genomic data" begin
+   par = PTParameters(50, 1.0, 0.2, 0.1, 0, 0.2)
+   qmsimfile="base_001.h5"
+   hp = generate_population(par, qmsimfile, nm=10, nf=10, gfile=qmsimfile)
+   pop = generate_population(par, qmsimfile, gfile=tempname())
+   base_males = migrate_from_hp!(hp,pop,random_sampling(hp,4,male=true),year=[1,2,3,4,5])
+   base_females = migrate_from_hp!(hp,pop,random_sampling(hp,2,female=true),year=[6])
+   bull_group = generate_group(pop, sires=base_males)
+   cow_group = generate_group(pop, dams=base_females)
+   progeny_id = mating!(bull_group, cow_group, "fgroup", year=10, method="dairy_standard_ai", n=2)
+   a1 = read_qmsim_individual_hdf5(pop.map, pop.gfile, 1)
+   a2 = read_qmsim_individual_hdf5(pop.map, pop.gfile, 2)
+   a3 = read_qmsim_individual_hdf5(pop.map, pop.gfile, 3)
+   a4 = read_qmsim_individual_hdf5(pop.map, pop.gfile, 4)
+   a5 = read_qmsim_individual_hdf5(pop.map, pop.gfile, 5)
+   a6 = read_qmsim_individual_hdf5(pop.map, pop.gfile, 6)
+   @test pop.df[1,:qbv] ≈ a1.tbv
+   @test pop.df[2,:qbv] ≈ a2.tbv
+   @test pop.df[3,:qbv] ≈ a3.tbv
+   @test pop.df[4,:qbv] ≈ a4.tbv
+   @test pop.df[5,:qbv] ≈ a5.tbv
+   @test pop.df[6,:qbv] ≈ a6.tbv
 end
