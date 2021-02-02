@@ -535,11 +535,11 @@ end
    fgroup = generate_group(pop, dams=cows)
    mating!(mgroup, fgroup, "fgroup", n="all", method="dairy_standard_ai", plan="once_per_female", calving=false, pmp=0.0)
    calving!(fgroup)
-   assign_phenotype!(fgroup, gen="all", repeated=false)
+   assign_phenotype!(fgroup, gen=nothing, repeated=false)
    @test sum( map(x->length(x.cg), pop.animal) ) == sum(.!pop.df[fgroup.id,:male] )
 
-   assign_phenotype!(fgroup, gen="all", repeated=false)
-   assign_phenotype!(fgroup, gen="all", repeated=false)
+   assign_phenotype!(fgroup, gen=nothing, repeated=false)
+   assign_phenotype!(fgroup, gen=nothing, repeated=false)
    @test maximum(pop.df[:,:nrec]) == 1
 
    bulls2 = migrate_from_hp!(hp,pop,random_sampling(hp,4,male=true))

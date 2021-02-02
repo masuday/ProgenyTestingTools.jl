@@ -1,22 +1,20 @@
 # functions for phenotype
 
 """
-    assign_phenotype!(group::PTGroup, gen="all"; male=false, female=true, year=-1, repeated=true)
+    assign_phenotype!(group::PTGroup, gen=nothing; male=false, female=true, year=nothing, repeated=true, limit=nothing)
 
-Put a phenotype to animals in generation `gen` in `group`, born in `year` (-1 to ignore the birth year).
-If `gen` is `"all"` or a negative integer, this function gives all animals in this group.
+Put a phenotype to animals in generation `gen` in `group`, born in `year` (`nothing` to ignore the birth year).
+If `gen` is `nothing` or a negative integer, this function gives all animals in this group.
 By default, only females have phenotypes (`male=false` and `female=true`).
 Also, an animal can have multiple (repeated records) due to `repeated=true`.
+To limit the number of repeated reacord, use `limit` (default = `nothing`, no limitation).
 """
-function assign_phenotype!(group::PTGroup; gen::Union{Int,String}="all", male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false, limit::Int=100)
+function assign_phenotype!(group::PTGroup; gen::Union{Nothing,Int}=nothing, male::Bool=false, female::Bool=true, year::Union{Nothing,Int}=nothing,
+   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing)
    pop = group.pop
    par = group.pop.par
-   if typeof(gen) == String
-      if gen=="all"
-         gencode = -1
-      else
-         error("gen = `all` or integer number")
-      end
+   if isnothing(gen)
+      gencode = -1
    else
       gencode = gen
    end
@@ -38,7 +36,7 @@ function assign_phenotype!(group::PTGroup; gen::Union{Int,String}="all", male::B
       cglist = Dict{Int,Int}(gen => pop.maxCG)
    end
 
-   if year>=0
+   if !isnothing(year)
       yearlist = pop.df[group.id[seqlist],:year]
       seqlist = seqlist[yearlist .== year]
    end
@@ -48,19 +46,20 @@ function assign_phenotype!(group::PTGroup; gen::Union{Int,String}="all", male::B
       end
    end
 
-   _assign_phenotype!(group, seqlist, cglist, male, female, repeated)
+   _assign_phenotype!(group, seqlist, cglist, male, female, repeated, limit)
 
    return nothing
 end
 
-function assign_phenotype!(groups::Vector{PTGroup}; gen::Union{Int,String}="all", male::Bool=false, female::Bool=true, year::Int=-1, repeated::Bool=true, verbose::Bool=false, limit::Int=100)
+function assign_phenotype!(groups::Vector{PTGroup}; gen::Union{Nothing,Int}=nothing, male::Bool=false, female::Bool=true, year::Union{Nothing,Int}=nothing, 
+   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing)
    for group in groups
-      assign_phenotype!(group, gen=gen, male=male, female=female, year=year, repeated=repeated, verbose=verbose)
+      assign_phenotype!(group, gen=gen, male=male, female=female, year=year, repeated=repeated, verbose=verbose, limit=limit)
    end
    return nothing
 end
 
-function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{Int,Int}, male::Bool, female::Bool, repeated::Bool, limit::Int=100)
+function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{Int,Int}, male::Bool, female::Bool, repeated::Bool, limit::Union{Nothing,Int})
    pop = group.pop
    par = group.pop.par
 
@@ -81,7 +80,12 @@ function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{I
       cg = cglist[gen]
       animal = pop.animal[id]
       nrec = length(animal.y)
-      if (nrec==0 || (nrec>=1 && repeated)) && nrec<=limit
+      if isnothing(limit)
+         nlim = nrec+1
+      else
+         nlim = limit
+      end
+      if (nrec==0 || (nrec>=1 && repeated)) && nrec<=nlim
          tbv = pop.df[id,:tbv]
          if nrec==0
             this_pe = sd_pe*randn()
