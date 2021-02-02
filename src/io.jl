@@ -2,10 +2,11 @@
 
 # not done yet
 function show(io::IO, ::MIME"text/plain", group::PTGroup)
-   print(io,"group_id = $(group.gid)\n")
+   print(io,"group_id = $(group.groupid)\n")
    print(io,"n = $(group.n)\n")
    print(io,"sires = $(group.sires)\n")
    print(io,"dams = $(group.dams)\n")
+   print(io,"max generation = $(maximum(group.generation))\n")
 end
 
 # write a data file
