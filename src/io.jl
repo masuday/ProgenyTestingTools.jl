@@ -6,7 +6,11 @@ function show(io::IO, ::MIME"text/plain", group::PTGroup)
    print(io,"n = $(group.n)\n")
    print(io,"sires = $(group.sires)\n")
    print(io,"dams = $(group.dams)\n")
-   print(io,"max generation = $(maximum(group.generation))\n")
+   if isempty(group.generation)
+      print(io,"max generation = empty list")
+   else
+      print(io,"max generation = $(maximum(group.generation))")
+   end
 end
 
 # write a data file

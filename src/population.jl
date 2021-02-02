@@ -230,7 +230,16 @@ function assign_year!(pop::PTPopulation, idlist::Vector{Int}, year::Int)
 end
 
 # new group with founder males and females
-function generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vector{Int}=Int[], aliveonly::Bool=true)
+function generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vector{Int}=Int[], aliveonly::Bool=true, empty::Bool=false)
+   if empty
+      pop.maxGroup = pop.maxGroup + 1
+      return PTGroup(pop, pop.maxGroup, 0, 0, 0, Int[], Int[], Int[], Int[])
+   else
+      return _generate_group(pop, sires=sires, dams=dams, aliveonly=aliveonly)
+   end
+end
+
+function _generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vector{Int}=Int[], aliveonly::Bool=true)
    check_idlist(sires)
    check_idlist(dams)
 
@@ -247,7 +256,7 @@ function generate_group(pop::PTPopulation; sires::Vector{Int}=Int[], dams::Vecto
    hassire = ifelse(nsires>0, true, false)
    hasdam = ifelse(ndams>0, true, false)
    if !hassire && !hasdam
-      throw(ArgumentError("no sire and dam lists"))
+      throw(ArgumentError("no sire and dam lists; use generate_group(pop,empty=true) for an empty group"))
    end
   
    n = nsires + ndams
