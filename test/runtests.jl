@@ -549,7 +549,12 @@ end
    calving!(fgroup)
    assign_phenotype!(fgroup, gen=2, repeated=false)
    @test length(selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup)) == sum(.!pop.df[fgroup.id[fgroup.generation .== 2],:male] )
-   @test maximum(pop.df[selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup),:nrec])==1
+   selected_id = selectid([:siregroup,:male]=>(x,y)->x==mgroup2.groupid && y==false,fgroup)
+   if length(selected_id)>0
+      @test maximum(pop.df[selected_id,:nrec])==1
+   else
+      @test_skip "invalid simulated data"
+   end
 end
 
 @testset "genomic data" begin
