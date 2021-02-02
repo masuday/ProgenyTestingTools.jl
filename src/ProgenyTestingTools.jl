@@ -42,8 +42,6 @@ end
 # will be updated when a new animal is born.
 #
 # maxCG: group x generation: increments when phenotype is assigned
-# sg: group of sire
-# dg: group of dam
 mutable struct PTPopulation
    par::PTParameters
    hp::Bool
@@ -51,19 +49,6 @@ mutable struct PTPopulation
    maxGroup::Int
    maxCG::Int
    df::DataFrame
-#   male::Vector{Bool}
-#   year::Vector{Int}
-#   alive::Vector{Bool}
-#   sampled::Vector{Bool}
-#   pregnant::Vector{Bool}
-#   genotyped::Vector{Bool}
-#   pedigree::Vector{Tuple{Int,Int}}
-#   inb::Vector{Float64}
-#   pbv::Vector{Float64}
-#   qbv::Vector{Float64}
-#   tbv::Vector{Float64}
-#   ebv::Vector{Float64}
-#   gebv::Vector{Union{Missing,Float64}}
    animal::Vector{PTAnimal}
 #   map::Union{Nothing,QMSimMap}
 #   gfile::String
@@ -81,7 +66,6 @@ mutable struct PTGroup
    dams::Vector{Int}
    id::Vector{Int}
    generation::Vector{Int}
-#   parentgroup::Vector{Tuple{Int,Int}}
 end
 
 export PTParameters, PTAnimal, PTPopulation, PTGroup
