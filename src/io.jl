@@ -53,8 +53,6 @@ function write(io::IO, pop::PTPopulation; header::Bool=true, missing::String="NA
 end
 
 function write_pedigree(io::IO, pop::PTPopulation; header::Bool=true)
-   nprogrec = number_of_progeny_with_records(pop)
-   nrec = number_of_records(pop)
    if header
       print(io,@sprintf("#%8s%8s%8s%7s%5s%3s%7s%4s%11s%11s%11s\n","animal","sire","dam","inb","yr","sx","recdau","rec","tbv","tbvpoly","tbvqtl"))
    end
@@ -66,7 +64,7 @@ function write_pedigree(io::IO, pop::PTPopulation; header::Bool=true)
       sex = ifelse(pop.df[i,:male],"1","2")
       year = pop.df[i,:year]
       code = get_inbupg_code(s,d,pop.df.inb)
-      pedigree = @sprintf("%8d%8d%8d%5d%7.4f%5d%3s%7d%4d%11.3g%11.3g%11.3g",i,s,d,code,inb,year,sex,pop.df[i,:nprogrec],pop.df[i,nrec],pop.df[i,:tbv],pop.df[i,:pbv],pop.df[i,:qbv])
+      pedigree = @sprintf("%8d%8d%8d%5d%7.4f%5d%3s%7d%4d%11.3g%11.3g%11.3g",i,s,d,code,inb,year,sex,pop.df[i,:nrecprog],pop.df[i,:nrec],pop.df[i,:tbv],pop.df[i,:pbv],pop.df[i,:qbv])
       print(io," " * pedigree * "\n")
    end
 end

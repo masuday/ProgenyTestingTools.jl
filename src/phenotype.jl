@@ -94,6 +94,14 @@ function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{I
          push!(animal.y, this_y)
          push!(animal.pe, this_pe)
          push!(animal.e, this_e)
+         s = pop.df[id,:sire]
+         d = pop.df[id,:dam]
+         if s>0
+            pop.df[s,:nrecprog] = pop.df[s,:nrecprog] + 1
+         end
+         if d>0
+            pop.df[d,:nrecprog] = pop.df[d,:nrecprog] + 1
+         end
          pop.df[id,:nrec] = length(animal.y)
          pop.df[id,:firsty] = animal.y[1]
          pop.df[id,:lasty] = animal.y[end]

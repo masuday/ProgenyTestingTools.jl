@@ -161,7 +161,7 @@ function genetic_evaluation_blup!(pop::PTPopulation, datafile::String, pedfile::
    pop.ebv .= sol[1:pop.maxAnimal]
 end
 
-function build_mme(pop::PTPopulation, datafile::String, pedfile::String, repeated::Bool, cg::Bool)
+function build_mme(pop::PTPopulation, datafile::String, pedfile::String, repeated::Bool, cg::Bool; verbose::Bool=false)
    par = pop.par
    var_a = get_var_poly(par)
    var_g = get_var_qtl(par)
@@ -182,6 +182,9 @@ function build_mme(pop::PTPopulation, datafile::String, pedfile::String, repeate
    else
       repeatability_model = false
    end
+   if verbose; println("repeatability model: $(repeatability_model)"); end
+   if verbose; println("lambda_u: $(lambda_u)"); end
+   if verbose; println("lambda_pe: $(lambda_pe)"); end
 
    # details
    if repeatability_model
@@ -211,19 +214,26 @@ function build_mme(pop::PTPopulation, datafile::String, pedfile::String, repeate
          nlev = [pop.maxAnimal, 1]
       end
    end
+   if verbose; println("neff: $(neff)"); end
+   if verbose; println("nlev: $(nlev)"); end
+   if verbose; println("pos_eff: $(pos_eff)"); end
+   if verbose; println("offset: $(offset)"); end
+   if verbose; println("random_type: $(random_type)"); end
    
-   return build_mme_lhs_rhs(datafile,pedfile,neff,pos_eff,offset,pos_y,nlev,random_type,lambda_u,lambda_pe)
+   return build_mme_lhs_rhs(datafile,pedfile,neff,pos_eff,offset,pos_y,nlev,random_type,lambda_u,lambda_pe, verbose=verbose)
 end
 
-function build_mme_lhs_rhs(datafile::String,pedfile::String,neff::Int,pos_eff::Vector{Int},offset::Vector{Int},pos_y::Int,nlev::Vector{Int},random_type::Vector{String},lambda_u::Float64,lambda_pe::Float64)
+function build_mme_lhs_rhs(datafile::String,pedfile::String,neff::Int,pos_eff::Vector{Int},offset::Vector{Int},pos_y::Int,nlev::Vector{Int},random_type::Vector{String},lambda_u::Float64,lambda_pe::Float64; verbose::Bool=false)
    neq = sum(nlev)
    lhs = SparseMatrixDict(neq,neq)
    rhs = zeros(neq)
    build_mme_lhs_rhs_fixed!(lhs,rhs,datafile,neff,pos_eff,offset,pos_y)
    for i in 1:neff
       if random_type[i]=="u"
+         if verbose; println("ainverse"); end
          build_mme_lhs_rhs_ainverse!(lhs,pedfile,offset[i],lambda_u)
       elseif random_type[i]=="pe"
+         if verbose; println("diagonal"); end
          build_mme_lhs_rhs_diagonal!(lhs,offset[i],nlev[i],lambda_pe)
       end
    end
