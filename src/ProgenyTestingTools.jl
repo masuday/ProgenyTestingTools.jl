@@ -87,5 +87,6 @@ include("pedigree.jl")
 include("mating.jl")
 include("io.jl")
 include("evaluation.jl")
+include("batch.jl")
 
 end
