@@ -348,6 +348,25 @@ end
    @test all( id .== [] )
 end
 
+@testset "selectid from multiple groups" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=5,nf=5)
+   pop = generate_population(par)
+   hp_males = [3,2,4,5]
+   hp_females = [8,7,10,9]
+   pop_bulls = migrate_from_hp!(hp,pop,hp_males)
+   pop_dams = migrate_from_hp!(hp,pop,hp_females)
+   pop.df[2,:alive] = false
+   pop.df[7,:alive] = false
+   pop.df[!,:tbv] = [2,4,3,1, 2,1,3,4] * 1.0
+   pop.df[!,:gebv] = [2,4,3,missing, 2,1,missing,4] * 1.0
+   group1 = generate_group(pop, sires=pop_bulls[1:2], dams=pop_dams[1:2], aliveonly=false)
+   group1.generation = collect(1:length(group1.generation))*10
+   group2 = generate_group(pop, sires=pop_bulls[3:4], dams=pop_dams[3:4], aliveonly=false)
+   group2.generation = collect(1:length(group2.generation))*10
+   @test all( selectid([:male]=>x->x==true,[group1,group2]) .== [1,3,4])
+   @test all( selectid([:male]=>x->x==true,[group1,group2],sortby=:tbv) .== [3,1,4])
+end
 
 @testset "add_sires! and add_dams!" begin
    par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
