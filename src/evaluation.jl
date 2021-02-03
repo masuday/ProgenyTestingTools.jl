@@ -131,6 +131,37 @@ end
 
 Write the data and pedigree to files.
 With `repeated=false`, this function writes only the first record per animal.
+
+Each file has the following columns:
+- Phenotype file
+    1. animal
+    2. sire
+    3. dam
+    4. inbreeding (from 0.0 to 1.0)
+    5. birth year
+    6. sex (1=male, 2=female)
+    7. true breeding value (TBV = PBV + QBV)
+    8. polygenic breeding value (PBV)
+    9. QTL breeding value (QBV)
+    10. sequential mumber of observations
+    11. mu (fixed integer 1)
+    12. contemporary group code
+    13. phenotype
+    14. permanent environmental (PE) effect
+    15. residual term
+
+- Pedigree file
+    1. animal
+    2. sire
+    3. dam
+    4. inbreeding (from 0.0 to 1.0)
+    5. birth year
+    6. sex (1=male, 2=female)
+    7. number of progeny with record(s)
+    8. number of own record(s)
+    9. true breeding value (TBV = PBV + QBV)
+    10. polygenic breeding value (PBV)
+    11. QTL breeding value (QBV)
 """
 function write_files_for_blup(pop::PTPopulation, datafile::String, pedfile::String; repeated::Bool=true)
    io = open(datafile, "w");

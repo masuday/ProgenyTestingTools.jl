@@ -44,6 +44,34 @@ end
 # will be updated when a new animal is born.
 #
 # maxCG: group x generation: increments when phenotype is assigned
+"""
+It defines a set of animals in a population.
+The individual information will be stored in a dataframe `df` with the following columns.
+
+- `id::Int` = sequential code (from 1)
+- `male::Bool` = `true` for male, `false` for female
+- `year::Int` = birth year
+- `alive::Bool` = `true` for living individual
+- `pregnant::Bool` = `true` for pregnant individual
+- `genotyped::Bool` = `true` for genotyped individual
+- `sire::Int` = sire code
+- `dam::Int` = dam code
+- `siregroup::Int` = group ID of sire
+- `damgroup::Int` = group ID of dam
+- `nprog::Int` = number of progeny
+- `nrecprog::Int` = number of progeny with record(s)
+- `inb::Float64` = inbreeding coefficient (from 0.0 to 1.0)
+- `pbv::Float64` = polygenic breeding value (PBV)
+- `qbv::Float64` = QTL breeding value (QBV)
+- `tbv::Float64` = true (total) breeding value: TBV = PBV + QBV
+- `ebv::Float64` = estimated breeding value by pedigree BLUP
+- `gebv::Float64` = genomic EBV by "pseudo" genomic prediction
+- `rel::Float64` = user-supplied reliability of GEBV
+- `nrec::Int` = number of record(s)
+- `firsty::Float64` = the first observation
+- `lasty::Float64` = the last observation
+- `avgy::Float64` = average of observations
+"""
 mutable struct PTPopulation
    par::PTParameters
    hp::Bool
