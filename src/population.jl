@@ -165,16 +165,20 @@ function get_phenotypic_information(y::Vector{Float64})
 end
 
 """
-    newidlist = migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year=0)
+    newidlist = migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year=0, halt=true)
 
 Migrate some animals from a historical population `hp` to another population `pop`.
 The migrated animals have new IDs in the new population.
 The animals will have "dead" status in the historical population.
 It returns a new ID list `newidlist` in the new population.
+With `halt=true` (default), this function throws when there are no enough individuals in the historical population.
 """
-function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year::Union{Int,Vector{Int}}=0)
+function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{Int}; year::Union{Int,Vector{Int}}=0, halt::Bool=true)
    unique_idlist = unique(idlist)
    n = length(unique_idlist)
+   if n==0 && halt
+      error("empty ID list; maybe there is no more individual in the historical population.")
+   end
    newidlist = Vector{Int}()
    @inbounds for id in unique_idlist
       # check id in the historiacl population
@@ -190,7 +194,11 @@ function migrate_from_hp!(hp::PTPopulation, pop::PTPopulation, idlist::Vector{In
          # assigned new id
          push!(newidlist, pop.maxAnimal)
       else
-         @warn "id $(id) in hp is not alive, and has not been added to the populatiopn."
+         if halt
+            error("id $(id) in hp is not alive; maybe there is no more individual in the historical population.")
+         else
+            @warn "id $(id) in hp is not alive, and has not been added to the population."
+         end
       end
 
       # (hp) id to (pop) pop.maxAnimal
