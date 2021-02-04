@@ -69,7 +69,7 @@ function write_pedigree(io::IO, pop::PTPopulation; header::Bool=true)
       cand = ifelse(pop.df[i,:candidate],"1","0")
       year = pop.df[i,:year]
       code = get_inbupg_code(s,d,pop.df.inb)
-      pedigree = @sprintf("%8d%8d%8d%5d%7.4f%5d%3s%7d%4d%11.3g%11.3g%11.3g%5d",i,s,d,code,inb,year,sex,pop.df[i,:nrecprog],pop.df[i,:nrec],pop.df[i,:tbv],pop.df[i,:pbv],pop.df[i,:qbv],cand)
+      pedigree = @sprintf("%8d%8d%8d%5d%7.4f%5d%3s%7d%4d%11.3g%11.3g%11.3g%5s",i,s,d,code,inb,year,sex,pop.df[i,:nrecprog],pop.df[i,:nrec],pop.df[i,:tbv],pop.df[i,:pbv],pop.df[i,:qbv],cand)
       print(io," " * pedigree * "\n")
    end
 end
