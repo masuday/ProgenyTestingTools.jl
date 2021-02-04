@@ -425,6 +425,22 @@ end
    @test vacancy_for_dams(group) == 2
 end
 
+@testset "candidates" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=5,nf=5)
+   pop = generate_population(par)
+   hp_males = [3,2,4,5]
+   hp_females = [8,7,10,9]
+   pop_bulls = migrate_from_hp!(hp,pop,hp_males)
+   pop_dams = migrate_from_hp!(hp,pop,hp_females)
+   pop.df[2,:alive] = false
+   pop.df[7,:alive] = false
+   mark_candidate!(pop,[1,3])
+   @test all( pop.df[[1,3],:candidate] .== true)
+   @test_throws ErrorException mark_candidate!(pop,[2])
+   @test isnothing( mark_candidate!(pop,[2], check=false) )
+end
+
 @testset "cull!" begin
    par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
    hp = generate_population(par,nm=5,nf=5)

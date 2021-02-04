@@ -54,6 +54,7 @@ The individual information will be stored in a dataframe `df` with the following
 - `alive::Bool` = `true` for living individual
 - `pregnant::Bool` = `true` for pregnant individual
 - `genotyped::Bool` = `true` for genotyped individual
+- `candidate::Bool` = `true` for candidate for selection
 - `sire::Int` = sire code
 - `dam::Int` = dam code
 - `siregroup::Int` = group ID of sire
@@ -103,7 +104,8 @@ export PTParameters, PTAnimal, PTPopulation, PTGroup
 export check_parameters, get_var_poly, get_var_qtl, get_var_pe, get_var_error
 export assign_phenotype!
 export generate_population, migrate_from_hp!, generate_group, copy_group, add_new_animal!, 
-       selectid, random_sampling, add_sires!, add_dams!, vacancy_for_sires, vacancy_for_dams, cull!
+       selectid, random_sampling, add_sires!, add_dams!, vacancy_for_sires, vacancy_for_dams, 
+       mark_candidate!, cull!
 export update_inbreeding!
 export mating!, calving!
 export genetic_evaluation!, update_approximated_reliability!, write_files_for_blup
