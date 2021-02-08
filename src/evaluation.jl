@@ -117,6 +117,12 @@ function genetic_evaluation_tbv_ms!(pop::PTPopulation, updategebv::Bool)
    genetic_evaluation_tbv_ms!(pop, rel, updategebv)
 end
 
+function genetic_evaluation_tbv_ms!(pop::PTPopulation, rel::Float64, updategebv::Bool)
+   relv = copy(pop.df.rel)
+   relv .= rel
+   genetic_evaluation_tbv_ms!(pop, relv, updategebv)
+end
+
 """
     rel = approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0)
 
