@@ -9,6 +9,7 @@ This function supports the following models.
 
 - `model="blup"`: traditional pedigree-based BLUP; stored as `ebv`
 - `model="tbv"`: true breeding value (TBV) with reliability `rel` (defined as the squared correlation between TBV and predictions); stored as `gebv`
+- `model="tbv_ms"`: Mendelian sampling of true breeding value (TBV) with reliability `rel` (defined as the squared correlation between TBV and predictions); stored as `gebv`
 
 For "blup", the model does not have contemporary groups (CG); instead uses the general mean.
 With `cg=true`, the group effect will be considered.
@@ -29,6 +30,8 @@ function genetic_evaluation!(pop::PTPopulation; method::String="blup", repeated:
       end
    elseif method=="tbv"
       genetic_evaluation_tbv!(pop,rel,updategebv)
+   elseif method=="tbv_ms"
+      genetic_evaluation_tbv_ms!(pop,rel,updategebv)
    else
       error("unknown method: $(method)")
    end
@@ -78,6 +81,40 @@ end
 function genetic_evaluation_tbv!(pop::PTPopulation, updategebv::Bool)
    rel = pop.df.rel
    genetic_evaluation_tbv!(pop, rel, updategebv)
+end
+
+function genetic_evaluation_tbv_ms!(pop::PTPopulation, rel::Vector{Union{Missing,Float64}}, updategebv::Bool)
+   par = pop.par
+   var_g = get_var_poly(par) + get_var_qtl(par)
+   @inbounds for i=1:pop.maxAnimal
+      r = ifelse(ismissing(rel[i]),0.0,1.0)
+      if r>0.0
+         var_error = ((1-max(r,1.0))/max(r,1.0)) * var_g
+      else
+         var_error = 100*var_g
+      end
+      ms_sd_error = sqrt(var_error/2)
+      if pop.df[i,:sire]==0
+         tbv_s = 0.0
+      else
+         tbv_s = pop.df[pop.df[i,:sire],:tbv]
+      end
+      if pop.df[i,:dam]==0
+         tbv_d = 0.0
+      else
+         tbv_d = pop.df[pop.df[i,:dam],:tbv]
+      end
+      tbv_pa = (tbv_s + tbv_d)/2
+      tbv_ms = pop.df[i,:tbv] - tbv_pa
+      if updategebv || ismissing(pop.df[i,:gebv])
+         pop.df[i,:gebv] = tbv_ms + (randn() * ms_sd_error)
+      end
+   end
+end
+
+function genetic_evaluation_tbv_ms!(pop::PTPopulation, updategebv::Bool)
+   rel = pop.df.rel
+   genetic_evaluation_tbv_ms!(pop, rel, updategebv)
 end
 
 """
