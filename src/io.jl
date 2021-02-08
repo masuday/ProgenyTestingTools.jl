@@ -58,7 +58,7 @@ end
 
 function write_pedigree(io::IO, pop::PTPopulation; header::Bool=true)
    if header
-      print(io,@sprintf("#%8s%8s%8s%7s%5s%3s%7s%4s%11s%11s%11s%5s\n","animal","sire","dam","inb","yr","sx","recdau","rec","tbv","tbvpoly","tbvqtl","cand"))
+      print(io,@sprintf("%8s%8s%8s%5s%7s%5s%3s%7s%4s%11s%11s%11s%5s\n","animal","sire","dam","code","inb","yr","sx","recdau","rec","tbv","tbvpoly","tbvqtl","cand"))
    end
    for i in 1:pop.maxAnimal
       # animal, sire, dam
