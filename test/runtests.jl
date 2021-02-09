@@ -598,7 +598,7 @@ end
    @test pop.df[6,:qbv] ≈ a6.tbv
 end
 
-@testset "polygenic Mendelian sampling" verbose=true begin
+@testset "polygenic Mendelian sampling" begin
     ntest = 100000
     samples = zeros(ntest)
     inbs = 0.0
