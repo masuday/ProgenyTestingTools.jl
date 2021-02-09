@@ -124,12 +124,14 @@ function genetic_evaluation_tbv_ms!(pop::PTPopulation, rel::Float64, updategebv:
 end
 
 """
-    rel = approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0)
+    rel = approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0, updaterel=true)
 
 Calculate (roughly) approximated reliability based on the number of recorded progeny and own records.
 You can supply an extra daugher equivalent (DE) `de_extra` to the reliability if needed.
+If `updaterel=false`, this function computes the reliability only for new individuals that have not gotten the reliability yet.
+With `update=true`, it re-calculates the values for all individuals.
 """
-function approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0)
+function approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0, updaterel::Bool=true)
    par = pop.par
    h2 = par.h2_poly + par.h2_qtl
    rep = par.rep
@@ -158,13 +160,17 @@ function approximated_reliability(pop::PTPopulation; de_extra::Float64=0.0)
       # total DE
       de_animal = de_pa + de_y + de_dau + de_extra
       rel_animal = de_animal/(de_animal + k)
-      rel[i] = rel_animal
+      if updaterel || ismissing(pop.df[i,:rel])
+         rel[i] = rel_animal
+      else
+         rel[i] = pop.df[i,:rel]
+      end
    end
    return rel
 end
 
-function update_approximated_reliability!(pop::PTPopulation; de_extra::Float64=0.0)
-   rel = approximated_reliability(pop,de_extra=de_extra)
+function update_approximated_reliability!(pop::PTPopulation; de_extra::Float64=0.0, updaterel::Bool=true)
+   rel = approximated_reliability(pop,de_extra=de_extra,updaterel=updaterel)
    pop.df[:,:rel] .= rel
    return nothing
 end
