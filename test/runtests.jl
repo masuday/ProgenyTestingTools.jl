@@ -2,6 +2,7 @@ using ProgenyTestingTools
 using QMSimFiles
 using Test
 using Random
+using Statistics
 
 @testset "parameters" begin
    # no repeatability
@@ -595,4 +596,38 @@ end
    @test pop.df[4,:qbv] ≈ a4.tbv
    @test pop.df[5,:qbv] ≈ a5.tbv
    @test pop.df[6,:qbv] ≈ a6.tbv
+end
+
+@testset "polygenic Mendelian sampling" verbose=true begin
+    ntest = 100000
+    samples = zeros(ntest)
+    inbs = 0.0
+    inbd = 0.0
+    var_a = 4.0
+    #k = 0.0
+    for i=1:ntest
+       samples[i] = ProgenyTestingTools.get_ms_deviation(inbs, inbd, var_a)
+    end
+    @test isapprox(mean(samples),0.0, atol=0.1)
+    @test isapprox(std(samples),sqrt(0.5*var_a), atol=0.1)
+
+    inbs = 0.125
+    inbd = 0.250
+    var_a = 4.0
+    #k = 0.0
+    for i=1:ntest
+       samples[i] = ProgenyTestingTools.get_ms_deviation(inbs, inbd, var_a)
+    end
+    @test isapprox(mean(samples),0.0, atol=0.1)
+    @test isapprox(std(samples),sqrt((0.5 - 0.25*(inbs+inbd))*var_a), atol=0.1)
+
+    inbs = 0.125
+    inbd = 0.250
+    var_a = 4.0
+    k = 0.36
+    for i=1:ntest
+       samples[i] = ProgenyTestingTools.get_ms_deviation(inbs, inbd, var_a, k)
+    end
+    @test isapprox(mean(samples),0.0, atol=0.1)
+    @test isapprox(std(samples),sqrt((1-k)*(0.5 - 0.25*(inbs+inbd))*var_a), atol=0.1)
 end
