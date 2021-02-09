@@ -181,9 +181,37 @@ function generate_and_add_animal!(group::PTGroup, s::Int, d::Int, sgroup::Int, d
    return nothing
 end
 
-function get_ms_deviation(inbs::Float64, inbd::Float64, var_a::Float64)
-   sd_ms = sqrt( 0.5*(1 - 0.5*(inbs+inbd))*var_a )
+function get_ms_deviation(inbs::Float64, inbd::Float64, var_a::Float64, k::Float64=0.0)
+   sd_ms = sqrt( (1-k) * ( 0.5*(1 - 0.5*(inbs+inbd)) ) * var_a )
    return sd_ms*randn()
+end
+
+function update_polygenic_ms!(pop::PTPopulation, id::Int, k::Float64=0.0)
+   s = pop.df[i,:sire]
+   d = pop.df[i,:dam]
+   if s==0
+      us = 0.0
+      inbs = 0.0
+   else
+      us = pop.df[s,:pbv]
+      inbs = pop.df[s,:inb]
+   end
+   if d==0
+      ud = 0.0
+      inbd = 0.0
+   else
+      ud = pop.df[d,:pbv]
+      inbd = pop.df[d,:inb]
+   end
+   pa = (us + ud)/2
+   ms = get_ms_deviation(inbs, inbd, var_a, k)
+   pop.df[id,:pbv] = pa + ms
+end
+
+function update_polygenic_ms!(pop::PTPopulation, idlist::Vector{Int}, k::Float64=0.0)
+   for id in idlist
+      update_polygenic_ms!(pop, id, k)
+   end
 end
 
 # calving
