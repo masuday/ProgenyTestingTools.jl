@@ -41,7 +41,7 @@ end
    par = pop.par
    var_g = get_var_poly(par) + get_var_qtl(par)
    if rel>0.0
-      var_error = ((1-max(rel,1.0))/max(rel,1.0)) * var_g
+      var_error = ((1-min(rel,1.0))/min(rel,1.0)) * var_g
    else
       var_error = 100*var_g
    end
@@ -67,7 +67,7 @@ function genetic_evaluation_tbv!(pop::PTPopulation, rel::Vector{Union{Missing,Fl
    @inbounds for i=1:pop.maxAnimal
       r = ifelse(ismissing(rel[i]),0.0,1.0)
       if r>0.0
-         var_error = ((1-max(r,1.0))/max(r,1.0)) * var_g
+         var_error = ((1-min(r,1.0))/min(r,1.0)) * var_g
       else
          var_error = 100*var_g
       end
@@ -89,7 +89,7 @@ function genetic_evaluation_tbv_ms!(pop::PTPopulation, rel::Vector{Union{Missing
    @inbounds for i=1:pop.maxAnimal
       r = ifelse(ismissing(rel[i]),0.0,1.0)
       if r>0.0
-         var_error = ((1-max(r,1.0))/max(r,1.0)) * var_g
+         var_error = ((1-min(r,1.0))/min(r,1.0)) * var_g
       else
          var_error = 100*var_g
       end
