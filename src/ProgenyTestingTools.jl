@@ -105,7 +105,7 @@ export check_parameters, get_var_poly, get_var_qtl, get_var_pe, get_var_error
 export assign_phenotype!
 export generate_population, migrate_from_hp!, generate_group, copy_group, add_new_animal!, 
        selectid, random_sampling, add_sires!, add_dams!, vacancy_for_sires, vacancy_for_dams, 
-       mark_candidate!, cull!
+       mark_candidate!, change_status!, cull!
 export update_inbreeding!
 export mating!, calving!
 export genetic_evaluation!, update_approximated_reliability!, write_files_for_blup

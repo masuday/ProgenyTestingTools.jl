@@ -66,6 +66,7 @@ function generate_population(par::PTParameters; nm::Int=0, nf::Int=0, map::Union
       pregnant = fill(false, maxAnimal),
       genotyped = genotyped,
       candidate = fill(false, maxAnimal),
+      status = zeros(Int, maxAnimal),
       sire = zeros(Int, maxAnimal),
       dam = zeros(Int, maxAnimal),
       siregroup = zeros(Int, maxAnimal),
@@ -129,11 +130,11 @@ Add an animal to population `pop`.
 The added animals lose the pedigree information.
 """
 function add_new_animal!(pop::PTPopulation, male::Bool, animal::PTAnimal; 
-                     genotyped=false, candidate=false, year=0, alive=true, pregnant=false, sire=0, dam=0, siregroup=0, damgroup=0, inb=0.0,
+                     genotyped=false, candidate=false, year=0, alive=true, pregnant=false, status=0, sire=0, dam=0, siregroup=0, damgroup=0, inb=0.0,
                      pbv=0.0, qbv=0.0, tbv=0.0, ebv=0.0, rel=missing, gebv=missing)
    pop.maxAnimal = pop.maxAnimal + 1
    (nrec,firsty,lasty,avgy) = get_phenotypic_information(animal.y)
-   newdata = (pop.maxAnimal, male, year, alive, pregnant, genotyped, candidate, sire, dam, siregroup, damgroup, 0, 0, inb, pbv, qbv, tbv, ebv, gebv, rel, nrec, firsty, lasty, avgy)
+   newdata = (pop.maxAnimal, male, year, alive, pregnant, genotyped, candidate, status, sire, dam, siregroup, damgroup, 0, 0, inb, pbv, qbv, tbv, ebv, gebv, rel, nrec, firsty, lasty, avgy)
    push!(pop.df, newdata)
    push!(pop.animal, animal)
    return nothing
@@ -143,7 +144,7 @@ function add_new_animal!(pop::PTPopulation, row::DataFrameRow{DataFrames.DataFra
    pop.maxAnimal = pop.maxAnimal + 1
    (nrec,firsty,lasty,avgy) = get_phenotypic_information(animal.y)
    newdata = (id=pop.maxAnimal, male=row.male, year=row.year, alive=row.alive, pregnant=row.pregnant, genotyped=row.genotyped, 
-              candidate=row.candidate, sire=row.sire, dam=row.dam, siregroup=row.siregroup, damgroup=row.damgroup, nprog=0, nrecprog=0, 
+              candidate=row.candidate, status=row.status, sire=row.sire, dam=row.dam, siregroup=row.siregroup, damgroup=row.damgroup, nprog=0, nrecprog=0, 
               inb=row.inb, pbv=row.pbv, qbv=row.qbv, tbv=row.tbv, ebv=row.ebv, gebv=row.gebv, rel=row.rel,
               nrec=nrec, firsty=firsty, lasty=lasty, avgy=avgy)
    push!(pop.df, newdata)
@@ -662,6 +663,26 @@ function mark_candidate!(pop::PTPopulation,idlist::Vector{Int}; check::Bool=true
          end
       end
       pop.df[id,:candidate] = true
+   end
+   return nothing
+end
+
+"""
+    n = change_status!(pop::PTPopulation, idlist::Vector{Int}, status=0)
+
+Change status for individuals in `idlist`.
+It just puts a number in the dataframe, and does nothing more.
+The status code is arbitrary; the user can define it (the default code is 0).
+This function does not check if the individual is alive or not.
+"""
+function change_status!(pop::PTPopulation,idlist::Vector{Int},status::Int=0; check::Bool=true)
+   for id in idlist
+      if check
+         if id<=0 || id>pop.maxAnimal
+            error("id $(id) out of range")
+         end
+      end
+      pop.df[id,:status] = status
    end
    return nothing
 end

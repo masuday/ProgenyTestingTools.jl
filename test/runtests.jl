@@ -426,7 +426,7 @@ end
    @test vacancy_for_dams(group) == 2
 end
 
-@testset "candidates" begin
+@testset "candidates and status" begin
    par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
    hp = generate_population(par,nm=5,nf=5)
    pop = generate_population(par)
@@ -440,6 +440,11 @@ end
    @test all( pop.df[[1,3],:candidate] .== true)
    @test_throws ErrorException mark_candidate!(pop,[2])
    @test isnothing( mark_candidate!(pop,[2], check=false) )
+
+   change_status!(pop,[5,6,8],1)
+   @test all( pop.df[[5,6,8],:status] .== 1)
+   @test_throws ErrorException change_status!(pop,[9],2)
+   @test isnothing( change_status!(pop,[7],2) )
 end
 
 @testset "cull!" begin

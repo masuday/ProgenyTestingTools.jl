@@ -58,7 +58,7 @@ end
 
 function write_pedigree(io::IO, pop::PTPopulation; header::Bool=true)
    if header
-      print(io,@sprintf("%8s%8s%8s%5s%7s%5s%3s%7s%4s%11s%11s%11s%5s\n","animal","sire","dam","code","inb","yr","sx","recdau","rec","tbv","tbvpoly","tbvqtl","cand"))
+      print(io,@sprintf("%8s%8s%8s%5s%7s%5s%3s%7s%4s%11s%11s%11s%5s%5s\n","animal","sire","dam","code","inb","yr","sx","recdau","rec","tbv","tbvpoly","tbvqtl","cand","stat"))
    end
    for i in 1:pop.maxAnimal
       # animal, sire, dam
@@ -69,7 +69,7 @@ function write_pedigree(io::IO, pop::PTPopulation; header::Bool=true)
       cand = ifelse(pop.df[i,:candidate],"1","0")
       year = pop.df[i,:year]
       code = get_inbupg_code(s,d,pop.df.inb)
-      pedigree = @sprintf("%8d%8d%8d%5d%7.4f%5d%3s%7d%4d%11.3g%11.3g%11.3g%5s",i,s,d,code,inb,year,sex,pop.df[i,:nrecprog],pop.df[i,:nrec],pop.df[i,:tbv],pop.df[i,:pbv],pop.df[i,:qbv],cand)
+      pedigree = @sprintf("%8d%8d%8d%5d%7.4f%5d%3s%7d%4d%11.3g%11.3g%11.3g%5s%5d",i,s,d,code,inb,year,sex,pop.df[i,:nrecprog],pop.df[i,:nrec],pop.df[i,:tbv],pop.df[i,:pbv],pop.df[i,:qbv],cand,pop.df[i,:status])
       print(io," " * pedigree * "\n")
    end
 end
