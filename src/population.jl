@@ -649,7 +649,7 @@ function add_dams!(group::PTGroup, id::Int; verbose::Bool=false)
 end
 
 """
-    n = select_candidate!(pop::PTPopulation, idlist::Vector{Int})
+    n = mark_candidate!(pop::PTPopulation, idlist::Vector{Int})
 
 Mark individuals in `idlist` as candidates for selection.
 It just puts a flag in the dataframe, and does nothing more.
