@@ -55,6 +55,7 @@ The individual information will be stored in a dataframe `df` with the following
 - `pregnant::Bool` = `true` for pregnant individual
 - `genotyped::Bool` = `true` for genotyped individual
 - `candidate::Bool` = `true` for candidate for selection
+- `status::Int` = user-defined status code (default = 0)
 - `sire::Int` = sire code
 - `dam::Int` = dam code
 - `siregroup::Int` = group ID of sire
