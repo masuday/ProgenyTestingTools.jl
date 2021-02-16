@@ -554,7 +554,7 @@ end
 
 @testset "assign_phenotype!" begin
    par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
-   hp = generate_population(par,nm=10,nf=10)
+   hp = generate_population(par,nm=20,nf=20)
    pop = generate_population(par)
    bulls = migrate_from_hp!(hp,pop,random_sampling(hp,4,male=true))
    cows = migrate_from_hp!(hp,pop,random_sampling(hp,4,female=true))
@@ -582,6 +582,17 @@ end
    else
       @test_skip "invalid simulated data"
    end
+
+   popx = generate_population(par)
+   bulls3 = migrate_from_hp!(hp,popx,random_sampling(hp,4,male=true))
+   cows3 = migrate_from_hp!(hp,popx,random_sampling(hp,4,female=true))
+   mgroup3 = generate_group(popx, sires=bulls3)
+   fgroup3 = generate_group(popx, dams=cows3)
+   mating!(mgroup3, fgroup3, "fgroup", n="all", method="dairy_standard_ai", plan="once_per_female", calving=false, pmp=0.0)
+   calving!(fgroup3)
+   assign_phenotype!(fgroup3, gen=nothing, repeated=false, idlist=[5,8,11])
+   @test sum(popx.df[:,:nrec] .> 0)==3
+   @test all( popx.df[findall(popx.df[:,:nrec] .> 0),:id] .== [5,8,11] )
 end
 
 @testset "genomic data" begin

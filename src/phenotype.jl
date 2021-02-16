@@ -1,16 +1,18 @@
 # functions for phenotype
 
 """
-    assign_phenotype!(group::PTGroup, gen=nothing; male=false, female=true, year=nothing, repeated=true, limit=nothing)
+    assign_phenotype!(group::PTGroup, gen=nothing; male=false, female=true, year=nothing, repeated=true, limit=nothing, idlist=1:group.pop.maxAnimal)
 
 Put a phenotype to animals in generation `gen` in `group`, born in `year` (`nothing` to ignore the birth year).
 If `gen` is `nothing` or a negative integer, this function gives all animals in this group.
 By default, only females have phenotypes (`male=false` and `female=true`).
 Also, an animal can have multiple (repeated records) due to `repeated=true`.
 To limit the number of repeated reacord, use `limit` (default = `nothing`, no limitation).
+Given `idlist`, only the animals in this list will have the phenotype; by default, all animals will have the phenotype.
+The list has to have been sorted.
 """
 function assign_phenotype!(group::PTGroup; gen::Union{Nothing,Int}=nothing, male::Bool=false, female::Bool=true, year::Union{Nothing,Int}=nothing,
-   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing)
+   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing, idlist::Union{UnitRange{Int},Vector{Int}}=1:group.pop.maxAnimal)
    pop = group.pop
    par = group.pop.par
    if isnothing(gen)
@@ -46,20 +48,21 @@ function assign_phenotype!(group::PTGroup; gen::Union{Nothing,Int}=nothing, male
       end
    end
 
-   _assign_phenotype!(group, seqlist, cglist, male, female, repeated, limit)
+   _assign_phenotype!(group, seqlist, cglist, male, female, repeated, limit, idlist=idlist)
 
    return nothing
 end
 
 function assign_phenotype!(groups::Vector{PTGroup}; gen::Union{Nothing,Int}=nothing, male::Bool=false, female::Bool=true, year::Union{Nothing,Int}=nothing, 
-   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing)
+   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing, idlist::Union{UnitRange{Int},Vector{Int}}=1:group.pop.maxAnimal)
    for group in groups
-      assign_phenotype!(group, gen=gen, male=male, female=female, year=year, repeated=repeated, verbose=verbose, limit=limit)
+      assign_phenotype!(group, gen=gen, male=male, female=female, year=year, repeated=repeated, verbose=verbose, limit=limit, idlist=idlist)
    end
    return nothing
 end
 
-function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{Int,Int}, male::Bool, female::Bool, repeated::Bool, limit::Union{Nothing,Int})
+function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{Int,Int}, male::Bool, female::Bool, 
+   repeated::Bool, limit::Union{Nothing,Int}; idlist::Union{UnitRange{Int},Vector{Int}}=1:group.pop.maxAnimal)
    pop = group.pop
    par = group.pop.par
 
@@ -74,6 +77,10 @@ function _assign_phenotype!(group::PTGroup, seqlist::Vector{Int}, cglist::Dict{I
       id = group.id[seq]
       if !(male && pop.df[id,:male]) && !(female && !pop.df[id,:male]) && group.pop.df[id,:alive]
          # out of condition
+         continue
+      end
+      if length(searchsorted(idlist,id))<1
+         # not on the list
          continue
       end
       gen = group.generation[seq]
