@@ -147,15 +147,6 @@ function kernel_meuwissen_and_luo2!(ped::Matrix{Ti}, inb::Vector{Tv}; first=1) w
    end
    f = OffsetArray{Tv}(undef,0:n)
    f[1:n] .= inb[1:n]
-   i::Ti = 0
-   j::Ti = 0
-   k::Ti = 0
-   s0::Ti = 0
-   d0::Ti = 0
-   ks::Ti = 0
-   kd::Ti = 0
-   fi::Tv = 0.0
-   r::Tv = 0.0
    point = zeros(Ti,n,Threads.nthreads())
    T = zeros(Tv,n,Threads.nthreads())
    B = zeros(Tv,n)
@@ -167,22 +158,22 @@ function kernel_meuwissen_and_luo2!(ped::Matrix{Ti}, inb::Vector{Tv}; first=1) w
       d0 = ped[2,i]
       B[i] = 0.5 - 0.25*(f[s0]+f[d0])
    end
-   Base.Threads.@spawn for i=first:n
-      s0 = ped[1,i]
-      d0 = ped[2,i]
+   Base.Threads.@threads for i=first:n
+      local s0 = ped[1,i]
+      local d0 = ped[2,i]
       B[i] = 0.5 - 0.25*(f[s0]+f[d0])
 
       if s0==0 || d0==0
          f[i] = 0.0
       else
-         fi = -1.0
+         local fi = -1.0
          T[i,Threads.threadid()] = 1.0
-         j = i
+         local j = i
          while(j!=0)
-            k = j
-            r = 0.5 * T[k,Threads.threadid()]
-            ks = ped[1,k]
-            kd = ped[2,k]
+            local k = j
+            local r = 0.5 * T[k,Threads.threadid()]
+            local ks = ped[1,k]
+            local kd = ped[2,k]
             if ks != 0
                while(point[k,Threads.threadid()]>ks)
                   k = point[k,Threads.threadid()]
