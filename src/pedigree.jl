@@ -212,6 +212,6 @@ function kernel_meuwissen_and_luo2!(ped::Matrix{Ti}, inb::Vector{Tv}; first=1) w
          f[i] = fi
       end
    end
-   inb[start:n] .= f[start:n]
+   inb[first:n] .= f[first:n]
    return nothing
 end
