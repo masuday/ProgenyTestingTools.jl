@@ -498,6 +498,11 @@ end
    hp.df[:,:dam] = dams
    update_inbreeding!(hp)
    @test hp.df[:,:inb] ≈ ref_f
+
+   f = copy(ref_f)
+   f[end] = 0.0
+   ProgenyTestingTools.get_inbreeding!(sires,dams,f,first=length(f))
+   @test f ≈ ref_f
 end
 
 @testset "mating between groups! (dairy_standard_ai)" begin
