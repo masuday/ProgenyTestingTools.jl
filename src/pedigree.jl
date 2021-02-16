@@ -5,33 +5,40 @@
 
 Calculate inbreeding coeffcients for individuals in the population.
 """
-function update_inbreeding!(sires::Vector{Int}, dams::Vector{Int}, inb::Vector{Float64}; start::Int=1, parallel::Bool=false)
-   f = get_inbreeding(sires, dams, start=start, parallel=parallel)
-   if length(f) == length(inb)
-      inb .= f
+function update_inbreeding!(sires::Vector{Int}, dams::Vector{Int}, inb::Vector{Float64}; first::Int=1)
+   if first == 1
+      f = get_inbreeding(sires, dams)
+      if length(f) == length(inb)
+         inb .= f
+      else
+         error("size mismatch: f and inb")
+      end
    else
-      error("size mismatch: f and inb")
+      get_inbreeding!(sires, dams, inb, first=first)
    end
    return
 end
 
-function update_inbreeding!(pop::PTPopulation; start::Int=1, parallel::Bool=false)
-   update_inbreeding!(pop.df.sire, pop.df.dam, pop.df.inb, start=start, parallel=parallel)
+function update_inbreeding!(pop::PTPopulation; first::Int=1)
+   update_inbreeding!(pop.df.sire, pop.df.dam, pop.df.inb, first=first)
 end
 
 """
    f = get_inbreeding(sires::Vector{Int},dams::Vector{Int})
+   get_inbreeding(sires::Vector{Int},dams::Vector{Int},inb::Vector{Float64})
 
 Calculate inbreeding coeffcients out of pedigree arrays.
 """
-function get_inbreeding(sires::Vector{Int}, dams::Vector{Int}; start::Int=1, parallel::Bool=false)
+function get_inbreeding(sires::Vector{Int}, dams::Vector{Int})
    pedlist = get_pedigree_list(sires,dams,ml=true)
-   if parallel
-      f = kernel_meuwissen_and_luo2!(Float64, pedlist, start=start)
-   else
-      f = kernel_meuwissen_and_luo!(Float64, pedlist)
-   end
+   f = kernel_meuwissen_and_luo!(Float64, pedlist)
    return f
+end
+
+function get_inbreeding!(sires::Vector{Int}, dams::Vector{Int}, inb::Vector{Float64}; first::Int=1)
+   pedlist = get_pedigree_list(sires,dams,ml=true)
+   kernel_meuwissen_and_luo2!(pedlist, inb, first=first)
+   return nothing
 end
 
 """
@@ -130,11 +137,16 @@ function kernel_meuwissen_and_luo!(Tv::DataType, ped::Matrix{Ti}) where Ti<:Inte
    return f[1:n]
 end
 
-# kernel of Meuwissen and Luo (1992); specialized for new animals in the same generation
+# kernel of Meuwissen and Luo (1992)
+# specialized for new animals in the same generation
 # the argument "ped" not being rewritten
-function kernel_meuwissen_and_luo2!(Tv::DataType, ped::Matrix{Ti}; start::Ti=1) where Ti<:Integer
+function kernel_meuwissen_and_luo2!(ped::Matrix{Ti}, inb::Vector{Tv}; first=1) where {Tv<:Real, Ti<:Integer}
    n::Ti = size(ped,2)
+   if n<length(inb)
+      throw(DimensionMismatch("inb shorter than pedigree size"))
+   end
    f = OffsetArray{Tv}(undef,0:n)
+   f[1:n] .= inb[1:n]
    i::Ti = 0
    j::Ti = 0
    k::Ti = 0
@@ -150,12 +162,12 @@ function kernel_meuwissen_and_luo2!(Tv::DataType, ped::Matrix{Ti}; start::Ti=1) 
 
    # start
    f[0] = -1
-   for i=1:start-1
+   for i=1:first-1
       s0 = ped[1,i]
       d0 = ped[2,i]
       B[i] = 0.5 - 0.25*(f[s0]+f[d0])
    end
-   Base.Threads.@spawn for i=start:n
+   Base.Threads.@spawn for i=first:n
       s0 = ped[1,i]
       d0 = ped[2,i]
       B[i] = 0.5 - 0.25*(f[s0]+f[d0])
@@ -200,5 +212,6 @@ function kernel_meuwissen_and_luo2!(Tv::DataType, ped::Matrix{Ti}; start::Ti=1) 
          f[i] = fi
       end
    end
-   return f[1:n]
+   inb[start:n] .= f[start:n]
+   return nothing
 end
