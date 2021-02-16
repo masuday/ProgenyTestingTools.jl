@@ -54,7 +54,7 @@ function assign_phenotype!(group::PTGroup; gen::Union{Nothing,Int}=nothing, male
 end
 
 function assign_phenotype!(groups::Vector{PTGroup}; gen::Union{Nothing,Int}=nothing, male::Bool=false, female::Bool=true, year::Union{Nothing,Int}=nothing, 
-   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing, idlist::Union{UnitRange{Int},Vector{Int}}=1:group.pop.maxAnimal)
+   repeated::Bool=true, verbose::Bool=false, limit::Union{Nothing,Int}=nothing, idlist::Union{UnitRange{Int},Vector{Int}}=1:groups[1].pop.maxAnimal)
    for group in groups
       assign_phenotype!(group, gen=gen, male=male, female=female, year=year, repeated=repeated, verbose=verbose, limit=limit, idlist=idlist)
    end

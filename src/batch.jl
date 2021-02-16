@@ -72,3 +72,33 @@ function number_of_active_females(herds::Vector{PTGroup})
    end
    return ndams,nheifers
 end
+
+function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="limited", n_breeders=0)
+   n_herds = length(herds)
+   pop = herds[1].pop
+   if plan=="limited"
+      # rule: All tested cows have phenotypes.
+      # rule: All cows in breeder herds have phenotypes.
+      # rule: Each bull has the upper limit on the number of daughters each year.
+      tested_id = zeros(Int,0)
+      breeder_cow_id = zeros(Int,0)
+      standard_cow_id = zeros(Int,0)
+      if year>0
+         # tested daughters
+         tested_id = selectid([:male,:year,:status] => (x,y,z) -> x==false && y==year && z==test_status, pop)
+         # regular daughters
+         for i=1:n_breeders
+            breeder_cow_id = [breeder_cow_id; selectid([:male,:year] => (x,y) -> x==false && y==year, herds[i])]
+         end
+         for i=n_breeders+1:n_herds
+            standard_cow_id = [standard_cow_id; selectid([:male,:year] => (x,y) -> x==false && y==year, herds[i])]
+         end
+         @show length(tested_id),length(breeder_cow_id),length(standard_cow_id)
+      else
+         throw(ArgumentError("year not given"))
+      end
+   else
+      throw(ArgumentError("plan not supported: $(plan)"))
+   end
+end
+
