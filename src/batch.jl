@@ -73,7 +73,7 @@ function number_of_active_females(herds::Vector{PTGroup})
    return ndams,nheifers
 end
 
-function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="limited", n_breeders=0, n_daughters=0)
+function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="limited", n_breeders=0, n_daughters=0, verbose=false)
    n_herds = length(herds)
    pop = herds[1].pop
    if plan=="limited"
@@ -98,7 +98,10 @@ function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="l
          n_breeder = length(breeder_cow_id)
          n_standard = length(standard_cow_id)
          n_additional = min(max(0,n_daughters-n_breeder),n_standard)
-         @show n_tested,n_breeder,n_additional
+
+         if verbose
+            println("   phenotyped cows: tested:$(n_tested) breeder:$(n_breeder) standard:$(n_additional); total:$(n_daughters)")
+         end
 
          # tested daughters + breeder cows + additional cows
          phenotyped_cow_id = [phenotyped_cow_id; tested_id; breeder_cow_id]
