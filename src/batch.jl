@@ -138,7 +138,7 @@ function expected_frequency_of_mating(mgroup::PTGroup,dist; by=:ebv, rev=true, s
    iperm = invperm(perm)
    x = sort((rand(dist,n)*scale .+ shift),rev=true)  # large to small
    if upper>0
-      x[x>upper] .= upper
+      x[x .> upper] .= upper
    end
    @show x
    x .= x[iperm]/sum(x)
