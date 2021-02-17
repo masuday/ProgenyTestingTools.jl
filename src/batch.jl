@@ -73,7 +73,7 @@ function number_of_active_females(herds::Vector{PTGroup})
    return ndams,nheifers
 end
 
-function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="limited", n_breeders=0)
+function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="limited", n_breeders=0, n_daughters=0)
    n_herds = length(herds)
    pop = herds[1].pop
    if plan=="limited"
@@ -83,6 +83,7 @@ function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="l
       tested_id = zeros(Int,0)
       breeder_cow_id = zeros(Int,0)
       standard_cow_id = zeros(Int,0)
+      phenotyped_cow_id = zeros(Int,0)
       if year>0
          # tested daughters
          tested_id = selectid([:male,:year,:status] => (x,y,z) -> x==false && y==year && z==test_status, pop)
@@ -93,12 +94,26 @@ function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="l
          for i=n_breeders+1:n_herds
             standard_cow_id = [standard_cow_id; selectid([:male,:year] => (x,y) -> x==false && y==year, herds[i])]
          end
-         @show length(tested_id),length(breeder_cow_id),length(standard_cow_id)
+         n_tested = length(tested_id)
+         n_breeder = length(breeder_cow_id)
+         n_standard = length(standard_cow_id)
+         n_additional = min(max(0,n_daughters-n_breeder),n_standard)
+         @show n_tested,n_breeder,n_additional
+
+         # tested daughters + breeder cows + additional cows
+         phenotyped_cow_id = [phenotyped_cow_id; tested_id; breeder_cow_id]
+         if n_additional>0
+            shuffle!(standard_cow_id)
+            phenotyped_cow_id = [phenotyped_cow_id; standard_cow_id[1:n_additional]]
+         end
+         sort!(phenotyped_cow_id)
+         return phenotyped_cow_id
       else
          throw(ArgumentError("year not given"))
       end
    else
       throw(ArgumentError("plan not supported: $(plan)"))
    end
+   return zeros(Int,0)
 end
 
