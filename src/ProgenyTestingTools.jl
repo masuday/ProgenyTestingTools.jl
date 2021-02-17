@@ -113,7 +113,7 @@ export mating!, calving!
 export genetic_evaluation!, update_approximated_reliability!, write_files_for_blup
 
 export test_mating!, regular_mating!, cull_old_bulls!, cull_old_cows!,
-       mean_inbreeding, number_of_active_females, phenotyped_cows
+       mean_inbreeding, number_of_active_females, phenotyped_cows, expected_frequency_of_mating
 
 include("parameter.jl")
 include("population.jl")
