@@ -12,18 +12,24 @@ It returns a list of dams that have been pregnant in this mating opportinity.
 The following options are available.
 
 - `n`: `"all"` for mating as many females as possible in particular `method` and `plan`. Or, you can limit the number of females for mating.
+- `prob`: `nothing` for the equal use of sires (default). If you want to choose a sire with a certain probability, provide `prob` with the probability for each sire, e.g. `[0.1,0.2,0.7]` for 3 sires.
 - `calving`: `true` for mating and calving at the same time in this function (but still returning `pregnant_dams`). By default, it is `false` to keep pregnancy for dams (use `calving!` to clear the pregnancy status).
 - `method`: mating strategy. The default is `"dairy_standard_ai"`, in which a cow has only one chance to mate one of the sires.
 - `plan`: `"once_per_female"` for using each dam once (default), or `"once_per_male"` for using each sire once.
 - `pmp`: proportion of progeny male (default=0.5).
 - `year`: birth year of progeny.
 """
-function mating!(mgroup::PTGroup, fgroup::PTGroup, progeny="fgroup"; 
+function mating!(mgroup::PTGroup, fgroup::PTGroup, progeny="fgroup"; prob::Union{Nothing,Vector{Float64}}=nothing,
    n::Union{Int,String}="all", year::Int=0, method::String="dairy_standard_ai", plan::String="once_per_female", 
    pmp::Float64=0.5, calving::Bool=false, updateinb::Bool=true, verbose::Bool=false)
 
    if length(mgroup.sires)<1 || length(fgroup.dams)<1
       error("No sires or no dams")
+   end
+   if !isnothing(prob)
+      if length(mgroup.sires) != length(prob)
+         throw(ArgumentError("length mismatch: mgroup.sires and prob"))
+      end
    end
 
    if progeny=="mgroup"
@@ -56,7 +62,7 @@ function mating!(mgroup::PTGroup, fgroup::PTGroup, progeny="fgroup";
       end
    end
    if method=="dairy_standard_ai"
-      pregnant_dams = _mating_dairy_standard_ai!(group, mgroup.sires, non_pregnant_dams, sgroup, dgroup, maxGen+1, pmp, method="random", plan=plan, year=year, n=ndams)
+      pregnant_dams = _mating_dairy_standard_ai!(group, mgroup.sires, non_pregnant_dams, sgroup, dgroup, maxGen+1, pmp, method="random", plan=plan, year=year, n=ndams, prob=prob)
    else
       error("unknown method $(method) for mating")
    end
@@ -79,7 +85,7 @@ end
 #  - one cow receives one service; producing n progeny from n dams.
 #  - no action if the cow has already been serviced in the same year.
 function _mating_dairy_standard_ai!(group::PTGroup, sires::Vector{Int}, dams::Vector{Int}, sgroup::Int, dgroup::Int, gen::Int, pmp::Float64; 
-   method::String="random", plan::String="once_per_female", year::Int=0, n::Int=length(dams))
+   method::String="random", plan::String="once_per_female", year::Int=0, n::Int=length(dams), prob::Union{Nothing,Vector{Float64}}=nothing)
    var_a = get_var_poly(group.pop.par)
    var_g = get_var_qtl(group.pop.par)
    var_g_sim = group.pop.par.var_g_sim
@@ -111,7 +117,11 @@ function _mating_dairy_standard_ai!(group::PTGroup, sires::Vector{Int}, dams::Ve
          @inbounds for d in damlist
             if d>0
                pregnant_dams_id[d] = true
-               s = rand(sires)
+               if isnothing(prob)
+                  s = rand(sires)
+               else
+                  s = sample(sires,Weights(prob))
+               end
                male = rand_male_calf(pmp)
                generate_and_add_animal!(group, s, d, sgroup, dgroup, male, gen, year, var_a, var_g, var_g_sim)
                nai = nai + 1

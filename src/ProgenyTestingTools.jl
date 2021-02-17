@@ -12,6 +12,7 @@ using DataFrames
 using OffsetArrays
 using SparseMatrixDicts
 using IterativeSolvers
+using StatsBase: sample, Weights
 
 # genetic parameters
 """
