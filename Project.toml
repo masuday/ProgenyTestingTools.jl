@@ -24,6 +24,7 @@ IterativeSolvers = "^0.9"
 OffsetArrays = "^1.5"
 QMSimFiles = "^0.1"
 SparseMatrixDicts = "^0.2"
+StatsBase = "^0.33"
 julia = "^1.5"
 
 [extras]
