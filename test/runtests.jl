@@ -552,6 +552,25 @@ end
    @test length(selectid([:pregnant] => x->x==true, pop))==0
 end
 
+@testset "mating between groups! (unqual use of sires)" begin
+   par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
+   hp = generate_population(par,nm=5,nf=1000)
+   pop = generate_population(par)
+   bulls = migrate_from_hp!(hp,pop,random_sampling(hp,5,male=true))
+   cows = migrate_from_hp!(hp,pop,random_sampling(hp,1000,female=true))
+   mgroup = generate_group(pop, sires=bulls)
+   fgroup = generate_group(pop, dams=cows)
+   prob = [0.05,0.05,0.05,0.05,0.8]
+   mating!(mgroup, fgroup, "fgroup", n="all", method="dairy_standard_ai", plan="once_per_female", calving=false, prob=prob)
+   n1 = sum(pop.df[:,:sire] .== 1)
+   n2 = sum(pop.df[:,:sire] .== 2)
+   n3 = sum(pop.df[:,:sire] .== 3)
+   n4 = sum(pop.df[:,:sire] .== 4)
+   n5 = sum(pop.df[:,:sire] .== 5)
+   @show prob,n1,n2,n3,n4,n5
+   @test n5>n1*10 && n5>n2*10 && n5>n3*10 && n5>n4*10
+end
+
 @testset "assign_phenotype!" begin
    par = PTParameters(50, 100, 0.5, 0, 0, 1.0)
    hp = generate_population(par,nm=20,nf=20)
