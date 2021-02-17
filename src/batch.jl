@@ -125,3 +125,22 @@ function phenotyped_cows(herds::Vector{PTGroup}; year=-1, test_status=0, plan="l
    return zeros(Int,0)
 end
 
+# To get N daughters on average with SD
+# possible use:
+#   Gamma(0.8,1.0); scale=65, shift=50; mean=100 std=55 upper=200 (lower=50)
+#   Gamma(1.0,1.0); scale=40, shift=50; mean=90  std=40 upper=250 (lower=50)
+#   or Gamma(1.0,1.0) upper=4.0 (98% percentile)
+function expected_frequency_of_mating(mgroup::PTGroup,dist; by=:ebv, rev=true, scale=1.0, shift=0.0, upper=0.0)
+   pop = mgroup.pop
+   n = length(mgroup.sires)
+   benchmark = pop.df[mgroup.sires,by]
+   perm = sortperm(benchmark,rev=rev) # large to small by default
+   iperm = invperm(perm)
+   x = sort((rand(dist,n)*scale .+ shift),rev=true)  # large to small
+   if upper>0
+      x[x>upper] .= upper
+   end
+   @show x
+   x .= x[iperm]/sum(x)
+   return x
+end
