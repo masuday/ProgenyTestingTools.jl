@@ -140,7 +140,6 @@ function expected_frequency_of_mating(mgroup::PTGroup,dist; by=:ebv, rev=true, s
    if upper>0
       x[x .> upper] .= upper
    end
-   @show x
    x .= x[iperm]/sum(x)
    return x
 end
